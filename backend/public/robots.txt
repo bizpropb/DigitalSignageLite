@@ -1,2 +1,5 @@
 User-agent: *
-Disallow:
+Disallow: /
+
+# Presenter V3 - Digital Signage System
+# Development/Private deployment - No indexing allowed
