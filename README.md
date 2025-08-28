@@ -38,6 +38,8 @@ This will start:
 - React frontend: http://localhost:3000
 - PostgreSQL database: localhost:5432
 - Filament admin: http://localhost:8000/admin
+- pgAdmin (PostgreSQL admin): http://localhost:5050
+(You can find the ports in docker desktop too)
 
 ### 4. Create admin user
 
@@ -52,17 +54,24 @@ Use these generic credentials for development:
 - **Email**: admin@example.com
 - **Password**: password
 
-## Development
+### 5. Access pgAdmin (PostgreSQL admin)
 
-### Stopping the application
-```bash
-docker compose down
-```
+Navigate to http://localhost:5050 and login with the same credentials you defined in step 4:
+- **Email**: admin@example.com
+- **Password**: password
 
-### Rebuilding after code changes
-```bash
-docker compose up --build
-```
+Connect your DB with pgAdmin via "add new server":
+- **Name**: presenter_v3_connection
+Change to the "Connections" Tab.
+- **Host**: postgres
+- **Port**: 5432 (should be there)
+- **Maintenance database**: presenter_v3
+- **Username**: postgres
+- **Kerberos**: false
+- **Password**: password
+- **Save password**: true
+(ignore the rest and save)
+
 
 ### Accessing containers
 ```bash
