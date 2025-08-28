@@ -7,6 +7,7 @@ services:
     container_name: presenter-backend
     ports:
       - "8000:8000"
+      - "8080:8080"
     volumes:
       - backend_vendor:/var/www/html/vendor
       - backend_storage:/var/www/html/storage

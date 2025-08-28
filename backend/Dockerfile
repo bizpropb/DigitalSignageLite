@@ -25,10 +25,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 WORKDIR /var/www/html
 
 # Copy composer files
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
-# Install PHP dependencies
-RUN composer install --no-scripts --no-autoloader
+# Copy composer files for dependency installation
+# Dependencies will be installed after copying full application
 
 # Copy package.json files  
 COPY package.json package-lock.json* ./
@@ -39,13 +39,16 @@ RUN npm install
 # Copy application code
 COPY . .
 
-# Generate autoloader
-RUN composer dump-autoload --optimize
+# Update composer dependencies and install new packages
+RUN composer update --optimize-autoloader
+
+# Publish Reverb configuration
+RUN php artisan vendor:publish --provider="Laravel\Reverb\ReverbServiceProvider" --tag="reverb-config" || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 8000
+EXPOSE 8000 8080
 
-# Start PHP development server with migrations
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Start PHP development server with migrations, Reverb WebSocket server, and queue worker
+CMD php artisan migrate --force && php artisan reverb:start --host=0.0.0.0 --port=8080 & php artisan queue:work --daemon & php artisan serve --host=0.0.0.0 --port=8000
