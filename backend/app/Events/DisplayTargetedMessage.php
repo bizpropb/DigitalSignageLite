@@ -10,22 +10,22 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TestMessage implements ShouldBroadcast
+class DisplayTargetedMessage implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
-    public $auth_token;
+    public $authToken;
 
-    public function __construct($message, $auth_token = null)
+    public function __construct($message, $authToken)
     {
         $this->message = $message;
-        $this->auth_token = $auth_token;
+        $this->authToken = $authToken;
     }
 
     public function broadcastOn()
     {
-        return new Channel('display-updates');
+        return new Channel("display-{$this->authToken}");
     }
 
     public function broadcastAs()
