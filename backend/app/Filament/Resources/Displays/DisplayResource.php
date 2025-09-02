@@ -43,6 +43,7 @@ class DisplayResource extends Resource
     {
         return [
             'index' => ListDisplays::route('/'),
+            'create' => CreateDisplay::route('/create'),
             'edit' => EditDisplay::route('/{record}/edit'),
         ];
     }

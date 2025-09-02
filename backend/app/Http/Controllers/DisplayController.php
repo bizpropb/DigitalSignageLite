@@ -101,4 +101,81 @@ class DisplayController extends Controller
             'display' => null
         ]);
     }
+
+    public function findByAccessToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'access_token' => 'required|string|size:6'
+        ]);
+
+        $display = Display::where('access_token', strtoupper($validated['access_token']))->first();
+
+        if ($display) {
+            $display->update([
+                'status' => 'connected',
+                'last_seen' => now(),
+                'initialized' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'display' => [
+                    'id' => $display->id,
+                    'name' => $display->name,
+                    'display_type' => $display->display_type,
+                    'location' => $display->location,
+                    'status' => $display->status,
+                    'last_seen' => $display->last_seen,
+                    'auth_token' => $display->auth_token,
+                    'access_token' => $display->access_token,
+                    'initialized' => $display->initialized,
+                    'created_at' => $display->created_at
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'error' => 'Invalid access token',
+            'display' => null
+        ]);
+    }
+
+    public function findByAuthToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'auth_token' => 'required|string|size:32'
+        ]);
+
+        $display = Display::where('auth_token', $validated['auth_token'])->first();
+
+        if ($display) {
+            $display->update([
+                'status' => 'connected',
+                'last_seen' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'display' => [
+                    'id' => $display->id,
+                    'name' => $display->name,
+                    'display_type' => $display->display_type,
+                    'location' => $display->location,
+                    'status' => $display->status,
+                    'last_seen' => $display->last_seen,
+                    'auth_token' => $display->auth_token,
+                    'access_token' => $display->access_token,
+                    'initialized' => $display->initialized,
+                    'created_at' => $display->created_at
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'error' => 'Invalid auth token',
+            'display' => null
+        ]);
+    }
 }

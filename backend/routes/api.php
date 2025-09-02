@@ -24,3 +24,5 @@ Route::post('/test-message', [TestController::class, 'sendTestMessage'])
 Route::post('/displays/register', [DisplayController::class, 'register']);
 Route::get('/displays/check/{device_id}', [DisplayController::class, 'checkDisplay']);
 Route::post('/displays/heartbeat', [DisplayController::class, 'heartbeat']);
+Route::post('/displays/find-by-token', [DisplayController::class, 'findByAccessToken']);
+Route::post('/displays/find-by-auth', [DisplayController::class, 'findByAuthToken']);

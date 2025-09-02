@@ -29,8 +29,27 @@ cd ..
 ### 2. Start the application
 ```bash
 docker compose down
-docker volume rm presenter-v3_frontend_node_modules presenter-v3_backend_storage presenter-v3_backend_bootstrap_cache presenter-v3_backend_vendor # These are cache/dependency volumes, but the naming prevents regeneration. remove them before startup to prevent issues.
+# remove ONLY the anonymous cache/dep volumes (never postgres_data or bind-mounts)
+docker volume rm presenter-v3_backend_vendor presenter-v3_backend_storage presenter-v3_backend_bootstrap_cache presenter-v3_frontend_node_modules 2>/dev/null || true
 docker compose up --build
+
+### Quickly rebuild and restart frontend
+```bash
+# Actually not needed, since the frontend is hot-reloaded
+docker compose stop frontend
+docker compose rm -f frontend
+docker volume rm presenter-v3_frontend_node_modules
+docker compose build frontend
+docker compose up -d frontend
+```
+
+### Quickly rebuild and restart backend
+```bash
+docker compose stop backend
+docker compose rm -f backend
+docker volume rm presenter-v3_backend_vendor presenter-v3_backend_storage presenter-v3_backend_bootstrap_cache
+docker compose build backend
+docker compose up -d backend
 ```
 
 This will start:

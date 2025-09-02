@@ -31,11 +31,13 @@ class DisplaysTable
                         'primary' => 'Public Facing',
                         'success' => 'Internal Use',
                         'warning' => 'Advertising',
-                    ]),
+                    ])
+                    ->sortable(),
 
                 TextColumn::make('location')
                     ->searchable()
-                    ->placeholder('Not set'),
+                    ->placeholder('Not set')
+                    ->sortable(),
 
                 BadgeColumn::make('status')
                     ->colors([
@@ -45,19 +47,25 @@ class DisplaysTable
                     ])
                     ->icons([
                         'heroicon-s-wifi' => 'connected',
-                        'heroicon-s-wifi-slash' => 'disconnected',
+                        'heroicon-s-no-symbol' => 'disconnected',
                         'heroicon-s-exclamation-triangle' => 'error',
-                    ]),
+                    ])
+                    ->sortable(),
 
-                TextColumn::make('last_seen')
-                    ->dateTime()
-                    ->placeholder('Never')
+                TextColumn::make('access_token')
+                    ->label('Access Token')
+                    ->badge()
+                    ->color('primary')
+                    ->copyable()
+                    ->copyMessage('Access token copied to clipboard')
+                    ->placeholder('Not generated')
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Created')
+                    ->date('Y-m-d')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->tooltip(fn ($record) => $record->created_at->format('Y-m-d H:i:s')),
             ])
             ->filters([
                 SelectFilter::make('display_type')

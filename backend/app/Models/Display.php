@@ -17,12 +17,15 @@ class Display extends Model
         'last_seen',
         'config',
         'auth_token',
+        'access_token',
+        'initialized',
     ];
 
     protected $casts = [
         'display_type' => DisplayType::class,
         'config' => 'array',
         'last_seen' => 'datetime',
+        'initialized' => 'boolean',
     ];
 
     protected function status(): Attribute
@@ -59,6 +62,9 @@ class Display extends Model
             if (empty($display->auth_token)) {
                 $display->auth_token = Str::random(32);
             }
+            if (empty($display->access_token)) {
+                $display->access_token = strtoupper(Str::random(6));
+            }
         });
     }
 
@@ -67,5 +73,12 @@ class Display extends Model
         $this->auth_token = Str::random(32);
         $this->save();
         return $this->auth_token;
+    }
+
+    public function regenerateAccessToken()
+    {
+        $this->access_token = strtoupper(Str::random(6));
+        $this->save();
+        return $this->access_token;
     }
 }
