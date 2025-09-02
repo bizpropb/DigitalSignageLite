@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\DisplayController;
 use App\Http\Controllers\Admin\DisplayTestController;
+use App\Http\Controllers\PublicKeyController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,3 +27,6 @@ Route::get('/displays/check/{device_id}', [DisplayController::class, 'checkDispl
 Route::post('/displays/heartbeat', [DisplayController::class, 'heartbeat']);
 Route::post('/displays/find-by-token', [DisplayController::class, 'findByAccessToken']);
 Route::post('/displays/find-by-auth', [DisplayController::class, 'findByAuthToken']);
+
+// Public key for JWT verification
+Route::get('/public-key', [PublicKeyController::class, 'getPublicKey']);

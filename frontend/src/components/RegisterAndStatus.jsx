@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import Pusher from 'pusher-js'
+import * as jose from 'jose'
 
 function RegisterAndStatus() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected')
   const [messages, setMessages] = useState([])
   const [accessToken, setAccessToken] = useState('')
   const [isRegistered, setIsRegistered] = useState(false)
+  const [serverPublicKey, setServerPublicKey] = useState(null)
   const [displayInfo, setDisplayInfo] = useState({
     id: null,
     name: 'Not registered',
@@ -107,6 +109,63 @@ function RegisterAndStatus() {
     }
   }
 
+  // Function to fetch server public key for JWT verification
+  const fetchServerPublicKey = async () => {
+    try {
+      console.log('Fetching server public key...')
+      const response = await fetch(`http://localhost:8000/api/public-key`)
+      console.log('Public key response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Public key response data:', data)
+        
+        if (data.success) {
+          console.log('Setting public key:', data.public_key.substring(0, 50) + '...')
+          setServerPublicKey(data.public_key)
+          localStorage.setItem('server_public_key', data.public_key)
+        } else {
+          console.error('Public key fetch failed:', data)
+        }
+      } else {
+        console.error('Public key endpoint returned status:', response.status)
+      }
+    } catch (error) {
+      console.error('Failed to fetch server public key:', error)
+    }
+  }
+
+  // Function to verify JWT message
+  const verifyMessage = async (signedMessage) => {
+    // Get public key from state or localStorage as fallback
+    let publicKeyToUse = serverPublicKey
+    if (!publicKeyToUse) {
+      publicKeyToUse = localStorage.getItem('server_public_key')
+      console.log('Using fallback public key from localStorage:', publicKeyToUse ? 'Found' : 'Not found')
+    }
+
+    if (!publicKeyToUse) {
+      console.error('No public key available for verification - state:', !!serverPublicKey, 'localStorage:', !!localStorage.getItem('server_public_key'))
+      return null
+    }
+
+    try {
+      console.log('Attempting to verify JWT with public key length:', publicKeyToUse.length)
+      
+      // Convert PEM public key to JOSE format
+      const publicKey = await jose.importSPKI(publicKeyToUse, 'RS256')
+      console.log('Public key imported successfully')
+      
+      // Verify and decode JWT
+      const { payload } = await jose.jwtVerify(signedMessage, publicKey)
+      console.log('JWT verification successful:', payload)
+      return payload.data
+    } catch (error) {
+      console.error('Message verification failed:', error)
+      return null
+    }
+  }
+
   // Function to send heartbeat
   const sendHeartbeat = async () => {
     if (!displayInfo.id) return
@@ -127,6 +186,20 @@ function RegisterAndStatus() {
   }
 
   useEffect(() => {
+    // Initialize public key immediately
+    const initializePublicKey = async () => {
+      const storedPublicKey = localStorage.getItem('server_public_key')
+      if (storedPublicKey) {
+        console.log('Using stored public key on mount:', storedPublicKey.substring(0, 50) + '...')
+        setServerPublicKey(storedPublicKey)
+      } else {
+        console.log('Fetching public key on mount...')
+        await fetchServerPublicKey()
+      }
+    }
+    
+    initializePublicKey()
+
     // Initialize Pusher connection to Laravel Reverb
     const pusher = new Pusher('local', {
       wsHost: window.location.hostname, // Use same host as React app
@@ -142,7 +215,15 @@ function RegisterAndStatus() {
     // Connection status handling
     pusher.connection.bind('connected', () => {
       setConnectionStatus('connected')
-      // Check for existing registration when connected
+      // Fetch public key and check registration when connected
+      const storedPublicKey = localStorage.getItem('server_public_key')
+      if (storedPublicKey) {
+        console.log('Using stored public key:', storedPublicKey.substring(0, 50) + '...')
+        setServerPublicKey(storedPublicKey)
+      } else {
+        console.log('No stored public key, fetching...')
+        fetchServerPublicKey()
+      }
       checkExistingRegistration()
     })
 
@@ -158,29 +239,43 @@ function RegisterAndStatus() {
     // Subscribe to display channel for this client
     const channel = pusher.subscribe('display-updates')
     
-    // Listen for test messages
-    channel.bind('test-message', (data) => {
-      // Get stored auth token from localStorage
-      const storedAuthToken = localStorage.getItem('display_auth_token')
+    // Listen for secure messages
+    channel.bind('secure-message', async (data) => {
+      console.log('Received secure message:', data)
       
-      // Verify auth token before displaying message
-      if (data.auth_token && storedAuthToken && data.auth_token === storedAuthToken) {
-        console.log('Authenticated Message Received')
-        setMessages(prev => [...prev, {
-          id: Date.now(),
-          message: data.message,
-          timestamp: new Date().toLocaleTimeString()
-        }])
-      } else if (data.auth_token) {
-        console.log('Unauthorized message received: wrong key')
+      if (data.signed_message) {
+        const messageData = await verifyMessage(data.signed_message)
+        
+        if (messageData) {
+          // Get stored auth token for additional verification
+          const storedAuthToken = localStorage.getItem('display_auth_token')
+          
+          // Verify auth token matches if present in message
+          if (messageData.auth_token && storedAuthToken && messageData.auth_token === storedAuthToken) {
+            console.log('Secure message verified and authorized')
+            setMessages(prev => [...prev, {
+              id: Date.now(),
+              message: messageData.message,
+              timestamp: new Date().toLocaleTimeString(),
+              verified: true
+            }])
+          } else if (!messageData.auth_token) {
+            // Broadcast message without specific auth token
+            console.log('Secure broadcast message verified')
+            setMessages(prev => [...prev, {
+              id: Date.now(),
+              message: messageData.message,
+              timestamp: new Date().toLocaleTimeString(),
+              verified: true
+            }])
+          } else {
+            console.log('Message verified but not authorized for this display')
+          }
+        } else {
+          console.log('Message signature verification failed - possible spoofing attempt')
+        }
       } else {
-        // For backward compatibility, show messages without auth_token
-        console.log('Message received without authentication')
-        setMessages(prev => [...prev, {
-          id: Date.now(),
-          message: data.message,
-          timestamp: new Date().toLocaleTimeString()
-        }])
+        console.log('Received unsigned message - ignoring for security')
       }
     })
 
@@ -384,8 +479,13 @@ function RegisterAndStatus() {
                 borderBottom: '1px solid #f3f4f6',
                 fontSize: '14px'
               }}>
-                <div style={{ color: '#6b7280', fontSize: '12px' }}>
-                  {msg.timestamp}
+                <div style={{ color: '#6b7280', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{msg.timestamp}</span>
+                  {msg.verified && (
+                    <span style={{ color: '#059669', fontSize: '10px', fontWeight: 'bold' }}>
+                      🔒 VERIFIED
+                    </span>
+                  )}
                 </div>
                 <div style={{ color: '#374151', marginTop: '4px' }}>
                   {msg.message}
