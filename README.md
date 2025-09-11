@@ -1,21 +1,38 @@
 # Presenter V3
 
-Full-stack application with Laravel backend (with Filament admin), React frontend, and PostgreSQL database, all containerized with Docker.
+Digital signage system with Laravel backend (Filament admin), React frontend, and PostgreSQL database.
 
 ## Prerequisites
 
-- Docker Desktop
+- Docker Desktop (for PostgreSQL only)
+- PHP 8.3+
+- Composer
+- Node.js 18+
 - Git
+
+## Architecture
+
+- **Backend**: Laravel 12 with Filament 4 admin panel (local)
+- **Frontend**: React with Vite (local)
+- **Database**: PostgreSQL 17 (Docker)
+- **WebSockets**: Laravel Reverb (local)
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Start Database
+```bash
+# 1. start
+docker compose down
+docker volume rm presenter-v4_postgres_data   # optional, wipes old db
+docker compose up -d
+```
+
+### 2. Install Dependencies
 
 **Backend:**
 ```bash
 cd backend
 composer install
-npm install
 cd ..
 ```
 
@@ -26,86 +43,91 @@ npm install
 cd ..
 ```
 
-### 2. Start the application
+### 3. Setup Database
 ```bash
-docker compose down
-# remove ONLY the anonymous cache/dep volumes (never postgres_data or bind-mounts)
-docker volume rm presenter-v3_backend_vendor presenter-v3_backend_storage presenter-v3_backend_bootstrap_cache presenter-v3_frontend_node_modules 2>/dev/null || true
-docker compose up --build
+cd backend
+php artisan config:clear
+php artisan migrate:fresh --seed
+php artisan make:filament-user --name=admin --email=admin@example.com --password=password
+cd ..
+```
+⚠️ If it fails, it means a local PostgreSQL is running and blocking your port.
+Run "services.msc", find "postgresql-xxx-xx", stop it. Do step 1 again, then step 3.
+If that didnt help, "run netstat -ano | findstr :5432" and stop these services (might require a restart afterwards)
 
-### Quickly rebuild and restart frontend
+### 4. Start Applications
+
+**Backend (Laravel + Filament) - Terminal 1:**
 ```bash
-# Actually not needed, since the frontend is hot-reloaded
-docker compose stop frontend
-docker compose rm -f frontend
-docker volume rm presenter-v3_frontend_node_modules
-docker compose build frontend
-docker compose up -d frontend
+cd backend
+php artisan serve
 ```
 
-### Quickly rebuild and restart backend
+**WebSocket Server - Terminal 2:**
 ```bash
-docker compose stop backend
-docker compose rm -f backend
-docker volume rm presenter-v3_backend_vendor presenter-v3_backend_storage presenter-v3_backend_bootstrap_cache
-docker compose build backend
-docker compose up -d backend
+cd backend
+php artisan reverb:start --port=8080
 ```
 
-This will start:
-- Laravel backend: http://localhost:8000
-- React frontend: http://localhost:3000
-- PostgreSQL database: localhost:5432
-- Filament admin: http://localhost:8000/admin
-- pgAdmin (PostgreSQL admin): http://localhost:5050
-(You can find the ports in docker desktop too)
+Access: http://localhost:8000 (Laravel) | http://localhost:8000/admin (Filament)
 
-### 4. Create admin user
-
-⚠️ **Important**: Git doesn't track database changes, so you need to create an admin user after first setup for FILAMENT:
-
+**Frontend (React) - Terminal 3:**
 ```bash
-docker exec -it presenter-backend php artisan make:filament-user
+cd frontend
+npm run dev
+```
+Access: http://localhost:3000
+
+### 5. Access pgAdmin (Optional)
+- URL: http://localhost:5050
+- Login: admin@example.com / password
+- Add server: Host=localhost, Port=5432, Database=presenter_v4, User=admin, Password=password
+
+
+# TROUBLESHOOTING
+
+## Database Refresh & Reseed
+**Most common fix - run when things break:**
+```bash
+cd backend
+php artisan migrate:fresh --seed
+php artisan make:filament-user --name=admin --email=admin@example.com --password=password
 ```
 
-Use these generic credentials for development:
-- **Name**: admin
-- **Email**: admin@example.com
-- **Password**: password
-
-### 5. Access pgAdmin (PostgreSQL admin)
-
-Navigate to http://localhost:5050 and login with the same credentials you defined in step 4:
-- **Email**: admin@example.com
-- **Password**: password
-
-Connect your DB with pgAdmin via "add new server":
-- **Name**: presenter_v3_connection
-Change to the "Connections" Tab.
-- **Host**: postgres
-- **Port**: 5432 (should be there)
-- **Maintenance database**: presenter_v3
-- **Username**: postgres
-- **Kerberos**: false
-- **Password**: password
-- **Save password**: true
-(ignore the rest and save)
-
-
-### Accessing containers
+## Cache Clear
+**When Laravel/Filament acts weird try this one // this thing tends to cache lots of things:**
 ```bash
-# Laravel backend
-docker exec -it presenter-backend bash
-
-# PostgreSQL
-docker exec -it presenter-postgres psql -U postgres -d presenter_v3
+cd backend
+php artisan config:clear
+php artisan optimize:clear
+php artisan filament:clear-cached-components
 ```
 
-## Architecture
+## Optimizations (make it faster)
 
-- **Backend**: Laravel 12 with Filament 4 admin panel
-- **Frontend**: React with Vite
-- **Database**: PostgreSQL 17
-- **Infrastructure**: Docker with named volumes (no bind mounts)
+⚠️ External icons (blade) slows down Filament under Windows OS. Use the following commands to increase speed.
+```bash
+# 1. Laravel config, routes, events, views
+php artisan config:cache
+php artisan route:cache
+php artisan event:cache
+php artisan view:cache
 
-All dependencies are containerized using Docker volumes for optimal performance and portability.
+# 2. Filament-specific caches (components + Blade icons)
+php artisan filament:optimize        # shorthand for the next two
+#   ├─ filament:cache-components
+#   └─ icons:cache
+
+# 3. Livewire JS asset (makes it a real static file Nginx/Apache can cache)
+php artisan livewire:publish --assets
+```
+⚠️Find ";opcache.enable=" in your php.ini and set it to "opcache.enable=1" for extra speed.
+
+⚠️ Fillament hates windows defender! mark your dir as excluded like this:
+```bash
+# Must be Admin to do this!
+Add-MpPreference -ExclusionPath "C:\dev\my-filament-app" # to exlude (change path)
+Get-MpPreference | Select-Object -ExpandProperty ExclusionPath # to check if applied
+```
+NOTE: Filament is NOT optimized for Windows, running it inside a unix enviroment (e.g. inside docker) is recommended.
+NOTE: Never ever use Docker Bindmounts for Fillament. It slows everything down to a crawl.
