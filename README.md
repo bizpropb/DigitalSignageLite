@@ -43,11 +43,11 @@ npm install
 cd ..
 ```
 
-### 3. Setup Database
+### 3. Setup Database ⚠️ Execute this command only once for the setup!
 ```bash
 cd backend
 php artisan config:clear
-php artisan migrate:fresh --seed
+php artisan migrate:fresh --seed # This drops the entire database if there is one!
 php artisan make:filament-user --name=admin --email=admin@example.com --password=password
 cd ..
 ```
