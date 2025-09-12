@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\DisplayType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
@@ -11,7 +10,7 @@ class Display extends Model
 {
     protected $fillable = [
         'name',
-        'display_type',
+        'program_id',
         'location',
         'status',
         'last_seen',
@@ -22,7 +21,6 @@ class Display extends Model
     ];
 
     protected $casts = [
-        'display_type' => DisplayType::class,
         'config' => 'array',
         'last_seen' => 'datetime',
         'initialized' => 'boolean',
@@ -49,9 +47,9 @@ class Display extends Model
                     ->where('last_seen', '>=', now()->subMinutes(5));
     }
 
-    public function scopeByType($query, DisplayType $type)
+    public function program()
     {
-        return $query->where('display_type', $type);
+        return $this->belongsTo(Program::class);
     }
 
     protected static function boot()
