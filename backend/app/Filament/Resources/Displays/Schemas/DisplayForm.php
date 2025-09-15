@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Displays\Schemas;
 
-use App\Enums\DisplayType;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
+use App\Models\Program;
 
 class DisplayForm
 {
@@ -17,16 +17,12 @@ class DisplayForm
                     ->required()
                     ->maxLength(255),
                 
-                Select::make('display_type')
-                    ->options([
-                        'New' => 'New',
-                        'Inactive' => 'Inactive',
-                        'Public Facing' => 'Public Facing',
-                        'Internal Use' => 'Internal Use',
-                        'Advertising' => 'Advertising',
-                    ])
-                    ->default('New')
-                    ->required(),
+                Select::make('program_id')
+                    ->label('Program')
+                    ->options(Program::pluck('name', 'id'))
+                    ->searchable()
+                    ->required()
+                    ->helperText('Select the program this display should run'),
                 
                 TextInput::make('location')
                     ->maxLength(255)

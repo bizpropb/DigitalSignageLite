@@ -90,7 +90,7 @@ Access: http://localhost:3000
 **Most common fix - run when things break:**
 ```bash
 cd backend
-php artisan migrate:fresh --seed
+php artisan migrate:fresh --seed # This drops the entire database if there is one!
 php artisan make:filament-user --name=admin --email=admin@example.com --password=password
 ```
 
@@ -105,22 +105,6 @@ php artisan filament:clear-cached-components
 
 ## Optimizations (make it faster)
 
-⚠️ External icons (blade) slows down Filament under Windows OS. Use the following commands to increase speed.
-```bash
-# 1. Laravel config, routes, events, views
-php artisan config:cache
-php artisan route:cache
-php artisan event:cache
-php artisan view:cache
-
-# 2. Filament-specific caches (components + Blade icons)
-php artisan filament:optimize        # shorthand for the next two
-#   ├─ filament:cache-components
-#   └─ icons:cache
-
-# 3. Livewire JS asset (makes it a real static file Nginx/Apache can cache)
-php artisan livewire:publish --assets
-```
 ⚠️Find ";opcache.enable=" in your php.ini and set it to "opcache.enable=1" for extra speed.
 
 ⚠️ Fillament hates windows defender! mark your dir as excluded like this:
@@ -131,3 +115,15 @@ Get-MpPreference | Select-Object -ExpandProperty ExclusionPath # to check if app
 ```
 NOTE: Filament is NOT optimized for Windows, running it inside a unix enviroment (e.g. inside docker) is recommended.
 NOTE: Never ever use Docker Bindmounts for Fillament. It slows everything down to a crawl.
+
+## Pitfalls
+
+⚠️ Do NOT Cache things during development! it can horribly confuse you and make you think your code is not working.
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan event:cache
+php artisan view:cache
+php artisan filament:optimize
+php artisan livewire:publish --assets
+```

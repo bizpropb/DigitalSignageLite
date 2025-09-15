@@ -19,6 +19,11 @@ class Program extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'program_items');
+        return $this->belongsToMany(Item::class, 'program_items')->withPivot('sort_order')->orderBy('sort_order');
+    }
+
+    public function programItems()
+    {
+        return $this->hasMany(ProgramItem::class)->orderBy('sort_order');
     }
 }

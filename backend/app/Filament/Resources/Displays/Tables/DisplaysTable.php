@@ -24,15 +24,13 @@ class DisplaysTable
                     ->searchable()
                     ->sortable(),
 
-                BadgeColumn::make('display_type')
-                    ->colors([
-                        'gray' => 'New',
-                        'danger' => 'Inactive',
-                        'primary' => 'Public Facing',
-                        'success' => 'Internal Use',
-                        'warning' => 'Advertising',
-                    ])
-                    ->sortable(),
+                TextColumn::make('program.name')
+                    ->label('Program')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('No program assigned')
+                    ->badge()
+                    ->color('info'),
 
                 TextColumn::make('location')
                     ->searchable()
@@ -68,14 +66,9 @@ class DisplaysTable
                     ->tooltip(fn ($record) => $record->created_at->format('Y-m-d H:i:s')),
             ])
             ->filters([
-                SelectFilter::make('display_type')
-                    ->options([
-                        'New' => 'New',
-                        'Inactive' => 'Inactive', 
-                        'Public Facing' => 'Public Facing',
-                        'Internal Use' => 'Internal Use',
-                        'Advertising' => 'Advertising',
-                    ]),
+                SelectFilter::make('program_id')
+                    ->label('Program')
+                    ->relationship('program', 'name'),
 
                 SelectFilter::make('status')
                     ->options([
