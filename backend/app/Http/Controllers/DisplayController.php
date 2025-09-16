@@ -108,7 +108,7 @@ class DisplayController extends Controller
             'access_token' => 'required|string|size:6'
         ]);
 
-        $display = Display::where('access_token', strtoupper($validated['access_token']))->first();
+        $display = Display::with('program')->where('access_token', strtoupper($validated['access_token']))->first();
 
         if ($display) {
             $display->update([
@@ -122,7 +122,7 @@ class DisplayController extends Controller
                 'display' => [
                     'id' => $display->id,
                     'name' => $display->name,
-                    'display_type' => $display->display_type,
+                    'program' => $display->program ? $display->program->name : null,
                     'location' => $display->location,
                     'status' => $display->status,
                     'last_seen' => $display->last_seen,
@@ -147,7 +147,7 @@ class DisplayController extends Controller
             'auth_token' => 'required|string|size:32'
         ]);
 
-        $display = Display::where('auth_token', $validated['auth_token'])->first();
+        $display = Display::with('program')->where('auth_token', $validated['auth_token'])->first();
 
         if ($display) {
             $display->update([
@@ -160,7 +160,7 @@ class DisplayController extends Controller
                 'display' => [
                     'id' => $display->id,
                     'name' => $display->name,
-                    'display_type' => $display->display_type,
+                    'program' => $display->program ? $display->program->name : null,
                     'location' => $display->location,
                     'status' => $display->status,
                     'last_seen' => $display->last_seen,

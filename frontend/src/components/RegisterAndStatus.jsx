@@ -11,7 +11,7 @@ function RegisterAndStatus() {
   const [displayInfo, setDisplayInfo] = useState({
     id: null,
     name: 'Not registered',
-    display_type: null,
+    program: null,
     location: 'Not registered',
     auth_token: null,
     access_token: null,
@@ -42,7 +42,7 @@ function RegisterAndStatus() {
           setDisplayInfo({
             id: data.display.id,
             name: data.display.name,
-            display_type: data.display.display_type,
+            program: data.display.program,
             location: data.display.location,
             auth_token: data.display.auth_token,
             access_token: data.display.access_token,
@@ -88,7 +88,7 @@ function RegisterAndStatus() {
             setDisplayInfo({
               id: data.display.id,
               name: data.display.name,
-              display_type: data.display.display_type,
+              program: data.display.program,
               location: data.display.location,
               auth_token: data.display.auth_token,
               access_token: data.display.access_token,
@@ -342,7 +342,7 @@ function RegisterAndStatus() {
         paddingBottom: '20px'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: 'black' }}>Presenter V3</h1>
+          <h1 style={{ margin: 0, color: 'black' }}>Presenter V4</h1>
           <p style={{ margin: '5px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
             Digital Signage Display Client
           </p>
@@ -429,7 +429,7 @@ function RegisterAndStatus() {
             <strong style={{ color: '#6b7280' }}>Name:</strong> {displayInfo.name}
           </div>
           <div>
-            <strong style={{ color: '#6b7280' }}>Type:</strong> {displayInfo.display_type || 'Not set'}
+            <strong style={{ color: '#6b7280' }}>Program:</strong> {displayInfo.program || 'Not set'}
           </div>
           <div>
             <strong style={{ color: '#6b7280' }}>Location:</strong> {displayInfo.location}
