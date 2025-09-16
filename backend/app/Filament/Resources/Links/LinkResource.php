@@ -21,7 +21,7 @@ class LinkResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'Items';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeAlt;
 
     protected static ?string $recordTitleAttribute = 'name';
 
