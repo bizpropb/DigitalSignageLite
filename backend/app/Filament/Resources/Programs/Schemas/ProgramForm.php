@@ -30,7 +30,8 @@ class ProgramForm
                         Select::make('item_id')
                             ->hiddenLabel()
                             ->preload(false)
-                            ->getOptionLabelUsing(function (string $value): string {
+                            ->getOptionLabelUsing(function ($value): string {
+                                if (!$value) return '';
                                 $item = Item::find($value);
                                 return $item
                                     ? Str::limit($item->name, 30) . ' || ' . Str::limit($item->description, 60)

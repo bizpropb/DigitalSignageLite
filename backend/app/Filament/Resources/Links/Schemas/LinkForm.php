@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Links\Schemas;
 
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Schema;
-use App\Models\Item;
 
 class LinkForm
 {
@@ -13,37 +14,44 @@ class LinkForm
     {
         return $schema
             ->components([
-                Select::make('item_id')
-                    ->label('Item')
-                    ->options(Item::where('type', 'Link')->pluck('name', 'id'))
-                    ->searchable()
+                Hidden::make('item_id'),
+                
+                TextInput::make('item.name')
+                    ->label('Name')
                     ->required()
-                    ->helperText('Select the Link item this configuration applies to'),
+                    ->maxLength(255),
+                    
+                Textarea::make('item.description')
+                    ->label('Description')
+                    ->maxLength(65535)
+                    ->columnSpanFull(),
+                    
+                TextInput::make('item.duration')
+                    ->label('Duration')
+                    ->required()
+                    ->numeric()
+                    ->suffix('seconds'),
+                
+                TextInput::make('url')
+                    ->required()
+                    ->url()
+                    ->maxLength(255)
+                    ->placeholder('https://example.com'),
                     
                 Select::make('animation')
                     ->options([
-                        'None' => 'None',
-                        'Fade In' => 'Fade In',
-                        'Slide Left' => 'Slide Left',
-                        'Slide Right' => 'Slide Right',
-                        'Slide Up' => 'Slide Up',
-                        'Slide Down' => 'Slide Down',
-                        'Zoom In' => 'Zoom In',
-                        'Bounce' => 'Bounce',
+                        'none' => 'None',
+                        'down' => 'Down',
+                        'down&reset' => 'Down & Reset',
+                        'down&up' => 'Down & Up',
                     ])
                     ->required()
-                    ->default('None'),
+                    ->default('none'),
                     
                 TextInput::make('animation_speed')
-                    ->label('Animation Speed')
                     ->required()
                     ->numeric()
-                    ->default(1)
-                    ->step(0.1)
-                    ->min(0.1)
-                    ->max(5)
-                    ->suffix('x')
-                    ->helperText('Animation speed multiplier (1 = normal speed, 2 = double speed, 0.5 = half speed)'),
+                    ->default(1),
             ]);
     }
 }

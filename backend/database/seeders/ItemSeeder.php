@@ -24,7 +24,8 @@ class ItemSeeder extends Seeder
 
         Link::create([
             'item_id' => $googleItem->id,
-            'animation' => 'None',
+            'url' => 'https://www.google.com',
+            'animation' => 'none',
             'animation_speed' => 1,
         ]);
 
@@ -38,7 +39,8 @@ class ItemSeeder extends Seeder
 
         Link::create([
             'item_id' => $filamentItem->id,
-            'animation' => 'Down',
+            'url' => 'https://filamentphp.com',
+            'animation' => 'down',
             'animation_speed' => 2,
         ]);
 
@@ -52,7 +54,8 @@ class ItemSeeder extends Seeder
 
         Link::create([
             'item_id' => $swayItem->id,
-            'animation' => 'Down & Up',
+            'url' => 'https://sway.office.com',
+            'animation' => 'down&up',
             'animation_speed' => 1,
         ]);
     }
