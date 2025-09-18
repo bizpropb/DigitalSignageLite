@@ -1,4 +1,4 @@
-# Presenter V3
+# Presenter V4
 
 Digital signage system with Laravel backend (Filament admin), React frontend, and PostgreSQL database.
 
@@ -57,21 +57,35 @@ If that didnt help, "run netstat -ano | findstr :5432" and stop these services (
 
 ### 4. Start Applications
 
-**Backend (Laravel + Filament) - Terminal 1:**
+**Laravel Logs (Optional) - Terminal 1:**
+```bash
+cd backend
+Get-Content storage/logs/laravel.log -Wait -Tail 0 # Shows Laravel logs in real-time. Only displays major events and things flagged to log. (mostly useless tbh)
+```
+
+**Backend (Laravel + Filament) - Terminal 2:**
 ```bash
 cd backend
 php artisan serve
 ```
-
-**WebSocket Server - Terminal 2:**
-```bash
-cd backend
-php artisan reverb:start --port=8080
-```
-
 Access: http://localhost:8000 (Laravel) | http://localhost:8000/admin (Filament)
 
-**Frontend (React) - Terminal 3:**
+**WebSocket Server - Terminal 3:**
+```bash
+cd backend
+php artisan reverb:start --port=8080 --debug # Proper Logs
+```
+
+👨‍🔧*Hint:* If Websocket ever gives you trouble, download wireshark to see all outgoing and incoming packages. it's way better than anything laravel offers.
+
+**Queue Worker - Terminal 4:**
+```bash
+cd backend
+php artisan queue:work
+```
+Processes broadcast jobs and sends them to WebSocket server.
+
+**Frontend (React) - Terminal 5:**
 ```bash
 cd frontend
 npm run dev
