@@ -54,6 +54,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->plugin(
+                \Stephenjude\FilamentDebugger\DebuggerPlugin::make()
+                    ->telescopeNavigation(condition: true, url: '/telescope')
+                    ->horizonNavigation(condition: false)
+                    ->pulseNavigation(condition: false)
+            );
     }
 }

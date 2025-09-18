@@ -101,16 +101,28 @@ class DisplaysTable
                     ->action(function ($record, $data) {
                         try {
                             $message = $data['message'];
+                            
+                            \Log::info("TEST MESSAGE BUTTON CLICKED - START");
+                            \Log::info("Display Record:", ['id' => $record->id, 'name' => $record->name, 'auth_token' => $record->auth_token]);
+                            \Log::info("Message Data:", ['message' => $message]);
+                            
+                            \Log::info("About to broadcast TestMessage event");
 
                             // Broadcast test message with display's auth_token for verification
                             broadcast(new \App\Events\TestMessage($message, $record->auth_token));
+                            
+                            \Log::info("Broadcast call completed successfully");
 
                             Notification::make()
                                 ->title('Test Message Sent')
                                 ->body("Message sent to display '{$record->name}': {$message}")
                                 ->success()
                                 ->send();
+                                
+                            \Log::info("TEST MESSAGE BUTTON CLICKED - END SUCCESS");
                         } catch (\Exception $e) {
+                            \Log::error("TEST MESSAGE BUTTON CLICKED - ERROR:", ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                            
                             Notification::make()
                                 ->title('Error')
                                 ->body('Failed to send test message: ' . $e->getMessage())
