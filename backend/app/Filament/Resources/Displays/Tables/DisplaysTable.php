@@ -37,18 +37,57 @@ class DisplaysTable
                     ->placeholder('Not set')
                     ->sortable(),
 
-                BadgeColumn::make('status')
+                BadgeColumn::make('connection_status')
+                    ->label('Status')
+                    ->getStateUsing(function ($record) {
+                        if ($record->isConnected()) {
+                            return 'online';
+                        } elseif ($record->status === 'connected' && $record->last_seen) {
+                            return 'stale';
+                        } else {
+                            return 'offline';
+                        }
+                    })
                     ->colors([
-                        'success' => 'connected',
-                        'danger' => 'disconnected',
-                        'warning' => 'error',
+                        'success' => 'online',
+                        'warning' => 'stale', 
+                        'danger' => 'offline',
                     ])
                     ->icons([
-                        'heroicon-s-wifi' => 'connected',
-                        'heroicon-s-no-symbol' => 'disconnected',
-                        'heroicon-s-exclamation-triangle' => 'error',
+                        'heroicon-s-wifi' => 'online',
+                        'heroicon-s-clock' => 'stale',
+                        'heroicon-s-no-symbol' => 'offline',
                     ])
-                    ->sortable(),
+                    ->formatStateUsing(function ($state, $record) {
+                        return match($state) {
+                            'online' => 'Online',
+                            'stale' => 'Stale (' . $record->last_seen?->diffForHumans() . ')',
+                            'offline' => 'Offline',
+                            default => 'Unknown'
+                        };
+                    })
+                    ->tooltip(function ($record) {
+                        if ($record->isConnected()) {
+                            return 'Display is currently connected and active. Last seen: ' . $record->last_seen?->diffForHumans();
+                        } elseif ($record->last_seen) {
+                            return 'Display was last seen: ' . $record->last_seen->format('Y-m-d H:i:s') . ' (' . $record->last_seen->diffForHumans() . ')';
+                        } else {
+                            return 'Display has never connected';
+                        }
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        return $query->orderBy('last_seen', $direction);
+                    }),
+
+                TextColumn::make('last_seen')
+                    ->label('Last Seen')
+                    ->dateTime('M j, H:i')
+                    ->sortable()
+                    ->placeholder('Never')
+                    ->tooltip(fn ($record) => $record->last_seen ? 
+                        'Last seen: ' . $record->last_seen->format('Y-m-d H:i:s') . ' (' . $record->last_seen->diffForHumans() . ')' : 
+                        'Display has never connected'
+                    ),
 
                 TextColumn::make('access_token')
                     ->label('Access Token')
@@ -70,12 +109,29 @@ class DisplaysTable
                     ->label('Program')
                     ->relationship('program', 'name'),
 
-                SelectFilter::make('status')
+                SelectFilter::make('connection_status')
+                    ->label('Connection Status')
                     ->options([
-                        'connected' => 'Connected',
-                        'disconnected' => 'Disconnected',
-                        'error' => 'Error',
-                    ]),
+                        'online' => 'Online (Active)',
+                        'stale' => 'Stale (Inactive)', 
+                        'offline' => 'Offline',
+                    ])
+                    ->query(function ($query, $data) {
+                        if (!$data['value']) return $query;
+                        
+                        return match($data['value']) {
+                            'online' => $query->where('status', 'connected')
+                                             ->where('last_seen', '>=', now()->subMinutes(5)),
+                            'stale' => $query->where('status', 'connected')
+                                            ->where('last_seen', '<', now()->subMinutes(5))
+                                            ->whereNotNull('last_seen'),
+                            'offline' => $query->where(function($q) {
+                                $q->where('status', '!=', 'connected')
+                                  ->orWhereNull('last_seen');
+                            }),
+                            default => $query
+                        };
+                    }),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -106,10 +162,10 @@ class DisplaysTable
                             \Log::info("Display Record:", ['id' => $record->id, 'name' => $record->name, 'auth_token' => $record->auth_token]);
                             \Log::info("Message Data:", ['message' => $message]);
                             
-                            \Log::info("About to broadcast TestMessage event");
+                            \Log::info("About to broadcast DisplayTestMessage event");
 
-                            // Broadcast test message with display's auth_token for verification
-                            broadcast(new \App\Events\TestMessage($message, $record->auth_token));
+                            // Broadcast test message to specific display channel
+                            broadcast(new DisplayTestMessage($record->id, $message, $record->name));
                             
                             \Log::info("Broadcast call completed successfully");
 
@@ -130,7 +186,7 @@ class DisplaysTable
                                 ->send();
                         }
                     })
-                    ->visible(fn($record) => $record->status === 'connected'),
+                    ->visible(fn($record) => $record->isConnected()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

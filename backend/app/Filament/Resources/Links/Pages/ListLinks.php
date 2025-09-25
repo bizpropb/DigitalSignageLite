@@ -16,4 +16,11 @@ class ListLinks extends ListRecords
             CreateAction::make(),
         ];
     }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\LinkCompatibilityWarning::class,
+        ];
+    }
 }

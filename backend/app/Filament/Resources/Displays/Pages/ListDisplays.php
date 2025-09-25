@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Displays\Pages;
 use App\Filament\Resources\Displays\DisplayResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Notifications\Notification;
 
 class ListDisplays extends ListRecords
 {
@@ -16,6 +17,13 @@ class ListDisplays extends ListRecords
             CreateAction::make()
                 ->label('Add Device')
                 ->icon('heroicon-o-plus'),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\DisplayStatusWarning::class,
         ];
     }
 
