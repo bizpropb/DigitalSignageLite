@@ -155,12 +155,20 @@ class DisplayController extends Controller
                 'last_seen' => now()
             ]);
 
+            if (!$display->program) {
+                return response()->json([
+                    'success' => true,
+                    'display' => $display,
+                    'message' => 'No program assigned'
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'display' => [
                     'id' => $display->id,
                     'name' => $display->name,
-                    'program' => $display->program ? $display->program->name : null,
+                    'program' => $display->program,
                     'location' => $display->location,
                     'status' => $display->status,
                     'last_seen' => $display->last_seen,

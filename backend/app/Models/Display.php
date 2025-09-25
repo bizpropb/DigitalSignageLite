@@ -64,6 +64,20 @@ class Display extends Model
                 $display->access_token = strtoupper(Str::random(6));
             }
         });
+
+        static::updated(function ($display) {
+            // Check if program_id was changed
+            if ($display->isDirty('program_id')) {
+                \Log::info('Display program changed', [
+                    'display_id' => $display->id,
+                    'old_program' => $display->getOriginal('program_id'),
+                    'new_program' => $display->program_id
+                ]);
+                
+                // Broadcast configuration change to the specific display
+                broadcast(new \App\Events\DisplayConfigUpdated($display));
+            }
+        });
     }
 
     public function regenerateAuthToken()
