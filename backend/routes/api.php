@@ -6,6 +6,7 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\DisplayController;
 use App\Http\Controllers\Admin\DisplayTestController;
 use App\Http\Controllers\PublicKeyController;
+use App\Http\Controllers\AnimationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -30,3 +31,7 @@ Route::post('/displays/find-by-auth', [DisplayController::class, 'findByAuthToke
 
 // Public key for JWT verification
 Route::get('/public-key', [PublicKeyController::class, 'getPublicKey']);
+
+// Animation configuration for proxy
+Route::get('/animation', [AnimationController::class, 'getConfig']);
+Route::post('/animation', [AnimationController::class, 'updateConfig']);

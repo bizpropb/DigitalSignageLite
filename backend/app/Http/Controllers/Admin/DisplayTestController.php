@@ -30,6 +30,9 @@ class DisplayTestController extends Controller
         // Broadcast test message to the specific display
         broadcast(new DisplayTestMessage($display->id, $message, $display->name));
 
+        //  FIX: Add logging after broadcast
+        \Log::info('Test message broadcasted to display ID:', ['id' => $display->id]);
+
         return response()->json([
             'success' => true,
             'message' => "Test message sent to display '{$display->name}'"
