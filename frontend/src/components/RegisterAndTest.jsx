@@ -1,8 +1,10 @@
+// RegisterAndTest.jsx
 import { useState, useEffect } from 'react'
 import Pusher from 'pusher-js'
 import * as jose from 'jose'
+import DisplayInfo from './DisplayInfo'
 
-function RegisterAndStatus() {
+function RegisterAndTest() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected')
   const [messages, setMessages] = useState([])
   const [accessToken, setAccessToken] = useState('')
@@ -26,7 +28,7 @@ function RegisterAndStatus() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/displays/find-by-token`, {
+      const response = await fetch('http://localhost:8000/api/displays/find-by-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +41,9 @@ function RegisterAndStatus() {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
+          //  FIX: Consistent program name access
+          console.log('Program data type check:', typeof data.display.program, data.display.program)
+
           setDisplayInfo({
             id: data.display.id,
             name: data.display.name,
@@ -52,6 +57,22 @@ function RegisterAndStatus() {
           localStorage.setItem('display_auth_token', data.display.auth_token)
           localStorage.setItem('display_access_token', data.display.access_token)
           setIsRegistered(true)
+
+          // Subscribe to display-specific channel for per-display test messages
+          setTimeout(() => {
+            console.log('Subscribing to display-specific channel for ID:', data.display.id)
+            window.subscribeToDisplayChannel?.(data.display.id)
+          }, 100)
+
+          // Switch to program-specific channel if program is assigned
+          if (data.display.program) {
+            // We need to trigger this after state updates, so use a timeout
+            setTimeout(() => {
+              const programName = data.display.program?.name || data.display.program
+              console.log('Switching to program channel:', programName)
+              window.switchToProgramChannel?.(programName)
+            }, 200)
+          }
         } else {
           alert(data.error || 'Display not found')
         }
@@ -68,10 +89,10 @@ function RegisterAndStatus() {
   // Function to check for existing registration using stored auth_token
   const checkExistingRegistration = async () => {
     const storedAuthToken = localStorage.getItem('display_auth_token')
-    
+
     if (storedAuthToken) {
       try {
-        const response = await fetch(`http://localhost:8000/api/displays/find-by-auth`, {
+        const response = await fetch('http://localhost:8000/api/displays/find-by-auth', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,6 +105,9 @@ function RegisterAndStatus() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.display.initialized) {
+            //  FIX: Consistent program name access
+            console.log('Existing registration program data type check:', typeof data.display.program, data.display.program)
+
             // Display is already initialized, hide connection UI
             setDisplayInfo({
               id: data.display.id,
@@ -95,6 +119,21 @@ function RegisterAndStatus() {
               created_at: data.display.created_at
             })
             setIsRegistered(true)
+
+            // Subscribe to display-specific channel for per-display test messages
+            setTimeout(() => {
+              console.log('Subscribing to display-specific channel for existing display ID:', data.display.id)
+              window.subscribeToDisplayChannel?.(data.display.id)
+            }, 100)
+
+            // Switch to program-specific channel if program is assigned
+            if (data.display.program) {
+              setTimeout(() => {
+                const programName = data.display.program?.name || data.display.program
+                console.log('Switching to program channel on existing registration:', programName)
+                window.switchToProgramChannel?.(programName)
+              }, 200)
+            }
           } else if (data.display && !data.display.initialized) {
             // Display exists but not initialized yet - show access token if we have it
             const storedAccessToken = localStorage.getItem('display_access_token')
@@ -113,13 +152,13 @@ function RegisterAndStatus() {
   const fetchServerPublicKey = async () => {
     try {
       console.log('Fetching server public key...')
-      const response = await fetch(`http://localhost:8000/api/public-key`)
+      const response = await fetch('http://localhost:8000/api/public-key')
       console.log('Public key response status:', response.status)
-      
+
       if (response.ok) {
         const data = await response.json()
         console.log('Public key response data:', data)
-        
+
         if (data.success) {
           console.log('Setting public key:', data.public_key.substring(0, 50) + '...')
           setServerPublicKey(data.public_key)
@@ -151,11 +190,11 @@ function RegisterAndStatus() {
 
     try {
       console.log('Attempting to verify JWT with public key length:', publicKeyToUse.length)
-      
+
       // Convert PEM public key to JOSE format
       const publicKey = await jose.importSPKI(publicKeyToUse, 'RS256')
       console.log('Public key imported successfully')
-      
+
       // Verify and decode JWT
       const { payload } = await jose.jwtVerify(signedMessage, publicKey)
       console.log('JWT verification successful:', payload)
@@ -169,9 +208,9 @@ function RegisterAndStatus() {
   // Function to send heartbeat
   const sendHeartbeat = async () => {
     if (!displayInfo.id) return
-    
+
     try {
-      await fetch(`http://localhost:8000/api/displays/heartbeat`, {
+      await fetch('http://localhost:8000/api/displays/heartbeat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +236,7 @@ function RegisterAndStatus() {
         await fetchServerPublicKey()
       }
     }
-    
+
     initializePublicKey()
 
     // Initialize Pusher connection to Laravel Reverb
@@ -211,6 +250,14 @@ function RegisterAndStatus() {
       cluster: 'mt1', // Required by Pusher.js
       encrypted: false,
     })
+
+    //  FIX: Enhanced Pusher state logging
+    pusher.connection.bind('state_change', states => {
+      console.log('Pusher state:', states.current)
+    })
+
+    // Keep track of subscribed channels
+    let displayChannel = null // For display-specific messages (display.{id})
 
     // Connection status handling
     pusher.connection.bind('connected', () => {
@@ -237,19 +284,123 @@ function RegisterAndStatus() {
     })
 
     // Subscribe to display channel for this client
-    const channel = pusher.subscribe('display-updates')
-    
-    // Listen for secure messages
+    let channel = pusher.subscribe('display-updates')
+
+    // Function to subscribe to display-specific channel for per-display test messages
+    const subscribeToDisplayChannel = (displayId) => {
+      if (displayId && !displayChannel) {
+        //  FIX: Ensure proper template literal with backticks
+        const channelName = `display.${displayId}`
+        console.log('Subscribing to display-specific channel:', channelName)
+
+        displayChannel = pusher.subscribe(channelName)
+
+        //  FIX: Enhanced subscription logging
+        console.log('Subscribed to', channelName, '- binding display.test-message')
+
+        // Handle display-specific test messages (plain payload, no JWT signing)
+        displayChannel.bind('display.test-message', (data) => {
+          console.log('Received display test message:', data)
+          //  FIX: Enhanced message data logging
+          console.log('Test message data:', data)
+
+          // Add message to the test messages list (no verification needed for test messages)
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            message: data.message || 'Test message received',
+            timestamp: new Date().toLocaleTimeString(),
+            verified: false // Display test messages are not JWT-signed
+          }])
+        })
+
+        console.log('Display channel subscription successful for channel:', channelName)
+      }
+    }
+
+    // Function to switch to program-specific channel
+    const switchToProgramChannel = (programName) => {
+      if (programName && programName !== 'display-updates') {
+        console.log('Switching to program channel:', programName)
+
+        // Unsubscribe from current channel
+        pusher.unsubscribe(channel.name)
+
+        // Subscribe to program-specific channel
+        channel = pusher.subscribe(programName)
+
+        // Re-bind event listeners for the new channel
+        channel.bind('content-update', async (data) => {
+          //  FIX: Ensure proper template literal with backticks for console.log
+          console.log(`Received content update on ${programName} channel:`, data)
+
+          if (data.signed_message) {
+            const messageData = await verifyMessage(data.signed_message)
+
+            if (messageData) {
+              console.log('Program content update verified:', messageData)
+              // Handle actual content display here - NOT in test message system
+              // setMessages is only for test messages, not program content
+            }
+          }
+        })
+
+        // Re-bind secure-message listener for program channel
+        channel.bind('secure-message', async (data) => {
+          console.log('Received secure message on program channel:', data)
+
+          if (data.signed_message) {
+            const messageData = await verifyMessage(data.signed_message)
+
+            if (messageData) {
+              // Get stored auth token for additional verification
+              const storedAuthToken = localStorage.getItem('display_auth_token')
+
+              // Verify auth token matches if present in message
+              if (messageData.auth_token && storedAuthToken && messageData.auth_token === storedAuthToken) {
+                console.log('Secure message verified and authorized on program channel')
+                setMessages(prev => [...prev, {
+                  id: Date.now(),
+                  message: messageData.message,
+                  timestamp: new Date().toLocaleTimeString(),
+                  verified: true
+                }])
+              } else if (!messageData.auth_token) {
+                // Broadcast message without specific auth token
+                console.log('Secure broadcast message verified on program channel')
+                setMessages(prev => [...prev, {
+                  id: Date.now(),
+                  message: messageData.message,
+                  timestamp: new Date().toLocaleTimeString(),
+                  verified: true
+                }])
+              } else {
+                console.log('Message verified but not authorized for this display')
+              }
+            } else {
+              console.log('Message signature verification failed - possible spoofing attempt')
+            }
+          } else {
+            console.log('Received unsigned message - ignoring for security')
+          }
+        })
+      }
+    }
+
+    // Expose functions globally so they can be called from registration callbacks
+    window.switchToProgramChannel = switchToProgramChannel
+    window.subscribeToDisplayChannel = subscribeToDisplayChannel
+
+    // Listen for secure messages on default channel
     channel.bind('secure-message', async (data) => {
       console.log('Received secure message:', data)
-      
+
       if (data.signed_message) {
         const messageData = await verifyMessage(data.signed_message)
-        
+
         if (messageData) {
           // Get stored auth token for additional verification
           const storedAuthToken = localStorage.getItem('display_auth_token')
-          
+
           // Verify auth token matches if present in message
           if (messageData.auth_token && storedAuthToken && messageData.auth_token === storedAuthToken) {
             console.log('Secure message verified and authorized')
@@ -282,8 +433,14 @@ function RegisterAndStatus() {
     // Cleanup on unmount (but not in React StrictMode double-mount)
     return () => {
       if (channel) {
-        pusher.unsubscribe('display-updates')
+        pusher.unsubscribe(channel.name)
       }
+      if (displayChannel) {
+        pusher.unsubscribe(displayChannel.name)
+      }
+      // Clean up global function references
+      delete window.switchToProgramChannel
+      delete window.subscribeToDisplayChannel
       // Don't disconnect in development to avoid StrictMode issues
       if (import.meta.env.PROD) {
         pusher.disconnect()
@@ -296,228 +453,37 @@ function RegisterAndStatus() {
     if (connectionStatus !== 'connected' || !displayInfo.id) return
 
     const heartbeatInterval = setInterval(sendHeartbeat, 60000) // 60 seconds
-    
+
     return () => clearInterval(heartbeatInterval)
   }, [connectionStatus, displayInfo.id])
 
-  const getStatusDisplay = () => {
-    const statusConfig = {
-      connected: {
-        color: '#10b981',
-        backgroundColor: '#ecfdf5',
-        borderColor: '#a7f3d0',
-        icon: '🟢',
-        text: 'Connected'
-      },
-      disconnected: {
-        color: '#ef4444', 
-        backgroundColor: '#fef2f2',
-        borderColor: '#fecaca',
-        icon: '🔴',
-        text: 'Disconnected'
-      },
-      error: {
-        color: '#f59e0b',
-        backgroundColor: '#fffbeb', 
-        borderColor: '#fed7aa',
-        icon: '🟡',
-        text: 'Connection Error'
-      }
-    }
-    
-    return statusConfig[connectionStatus] || statusConfig.disconnected
-  }
-
-  const statusDisplay = getStatusDisplay()
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '30px',
-        borderBottom: '1px solid #e5e7eb',
-        paddingBottom: '20px'
-      }}>
-        <div>
-          <h1 style={{ margin: 0, color: 'black' }}>Presenter V4</h1>
-          <p style={{ margin: '5px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
-            Digital Signage Display Client
-          </p>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {!isRegistered && connectionStatus === 'connected' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="text"
-                value={accessToken}
-                onChange={(e) => setAccessToken(e.target.value.toUpperCase())}
-                placeholder="Enter 6-char token"
-                maxLength="6"
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  width: '140px',
-                  textAlign: 'center',
-                  textTransform: 'uppercase'
-                }}
-              />
-              <button
-                onClick={findDisplayByToken}
-                disabled={accessToken.length !== 6}
-                style={{
-                  backgroundColor: accessToken.length === 6 ? '#dc2626' : '#9ca3af',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: accessToken.length === 6 ? 'pointer' : 'not-allowed',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => {
-                  if (accessToken.length === 6) {
-                    e.target.style.backgroundColor = '#b91c1c'
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (accessToken.length === 6) {
-                    e.target.style.backgroundColor = '#dc2626'
-                  }
-                }}
-              >
-                Connect
-              </button>
-            </div>
-          )}
-          
-          <div style={{ 
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px', 
-            backgroundColor: statusDisplay.backgroundColor,
-            color: statusDisplay.color,
-            border: `1px solid ${statusDisplay.borderColor}`,
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
-            <span>{statusDisplay.icon}</span>
-            <span>{statusDisplay.text}</span>
-          </div>
-        </div>
-      </div>
+    <div className="page-container">
+      <h1 className="page-title">Presenter V4 - Register & Test</h1>
+      <p className="page-description">
+        Register your display device and test WebSocket messaging
+      </p>
+      <DisplayInfo
+        displayInfo={displayInfo}
+        isRegistered={isRegistered}
+        showRegistrationForm={true}
+        accessToken={accessToken}
+        onAccessTokenChange={setAccessToken}
+        onConnect={findDisplayByToken}
+      />
 
-      {/* Display Information */}
-      <div style={{
-        backgroundColor: '#f9fafb',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '20px',
-        marginBottom: '30px'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#374151' }}>Display Registration</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-          <div>
-            <strong style={{ color: '#6b7280' }}>Name:</strong> {displayInfo.name}
-          </div>
-          <div>
-            <strong style={{ color: '#6b7280' }}>Program:</strong> {displayInfo.program || 'Not set'}
-          </div>
-          <div>
-            <strong style={{ color: '#6b7280' }}>Location:</strong> {displayInfo.location}
-          </div>
-          <div>
-            <strong style={{ color: '#6b7280' }}>Access Token:</strong> {displayInfo.access_token || 'Not connected'}
-          </div>
-          <div>
-            <strong style={{ color: '#6b7280' }}>Created:</strong> {displayInfo.created_at ? new Date(displayInfo.created_at).toLocaleDateString('de-DE') : 'Unknown'}
-          </div>
-        </div>
-        
-        {isRegistered && (
-          <div style={{
-            marginTop: '15px',
-            padding: '12px',
-            backgroundColor: '#dcfce7',
-            border: '1px solid #bbf7d0',
-            borderRadius: '6px',
-            color: '#166534',
-            fontSize: '14px'
-          }}>
-            ✅ Display successfully connected
-          </div>
-        )}
-      </div>
-
-      {/* Messages */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '20px'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#374151' }}>Test-Message-System</h3>
-        {messages.length === 0 ? (
-          <p style={{ color: '#6b7280', fontStyle: 'italic' }}>
-            No messages received yet.
-            <br />Send a test message from the admin panel.
-            <br />Messages are temporary and not saved in the database.
-          </p>
-        ) : (
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            {messages.map(msg => (
-              <div key={msg.id} style={{ 
-                padding: '10px',
-                borderBottom: '1px solid #f3f4f6',
-                fontSize: '14px'
-              }}>
-                <div style={{ color: '#6b7280', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>{msg.timestamp}</span>
-                  {msg.verified && (
-                    <span style={{ color: '#059669', fontSize: '10px', fontWeight: 'bold' }}>
-                      🔒 VERIFIED
-                    </span>
-                  )}
-                </div>
-                <div style={{ color: '#374151', marginTop: '4px' }}>
-                  {msg.message}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Access Token Info */}
-      <div style={{
-        marginTop: '20px',
-        backgroundColor: '#dbeafe',
-        border: '1px solid #3b82f6',
-        borderRadius: '8px',
-        padding: '16px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            color: '#1d4ed8', 
-            marginRight: '12px',
-            fontSize: '20px',
-            lineHeight: '20px'
-          }}>
+      {/* Access Token Information */}
+      <div className="access-token-info">
+        <div className="info-content">
+          <div className="info-icon">
             ℹ️
           </div>
           <div>
-            <div style={{ margin: '0', color: '#1e3a8a', fontSize: '13px', lineHeight: '1.4' }}>
-              <strong>Access Token System</strong> 
+            <div className="info-text">
+              <strong className="info-strong">Access Token System</strong>
               <div>
-              Get your 6-character access token from the admin panel by creating a new display device. 
+              Get your 6-character access token from the admin panel by creating a new display device.
               Each token is unique and connects this browser to a specific display configuration.
               Your token is saved locally for reconnection after browser refresh.
               </div>
@@ -525,8 +491,39 @@ function RegisterAndStatus() {
           </div>
         </div>
       </div>
+
+
+      {/* Messages */}
+      <div className="messages-container">
+        <h3 className="h3">Test-Message-System</h3>
+        {messages.length === 0 ? (
+          <p className="no-messages">
+            No messages received yet.
+            <br />Send a test message from the admin panel.
+            <br />Messages are temporary and not saved in the database.
+          </p>
+        ) : (
+          <div className="log-container">
+            {messages.map(msg => (
+              <div key={msg.id} className="message-entry">
+                <div className="message-time">
+                  <span>{msg.timestamp}</span>
+                  {msg.verified && (
+                    <span className="verified-badge">
+                      🔒 VERIFIED
+                    </span>
+                  )}
+                </div>
+                <div className="message-content">
+                  {msg.message}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-export default RegisterAndStatus
+export default RegisterAndTest

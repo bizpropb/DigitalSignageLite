@@ -25,7 +25,7 @@ class DisplayTestMessage implements ShouldBroadcastNow
         $this->displayName = $displayName;
         $this->timestamp = now()->toISOString();
 
-        // GROK FIX: Add logging to constructor
+        //  FIX: Add logging to constructor
         \Log::info('DisplayTestMessage constructed with ID:', ['id' => $this->displayId]);
     }
 
@@ -34,7 +34,7 @@ class DisplayTestMessage implements ShouldBroadcastNow
         // Broadcast to a display-specific channel
         $channel = "display.{$this->displayId}";
 
-        // GROK FIX: Add logging to broadcastOn
+        //  FIX: Add logging to broadcastOn
         \Log::info('Broadcasting on channel:', ['channel' => $channel]);
 
         return new Channel($channel);
@@ -44,7 +44,7 @@ class DisplayTestMessage implements ShouldBroadcastNow
     {
         $eventName = 'display.test-message';
 
-        // GROK FIX: Add logging to broadcastAs
+        //  FIX: Add logging to broadcastAs
         \Log::info('DisplayTestMessage broadcastAs:', ['event_name' => $eventName]);
 
         return $eventName;
@@ -60,7 +60,7 @@ class DisplayTestMessage implements ShouldBroadcastNow
             'type' => 'admin_test'
         ];
 
-        // GROK FIX: Add logging to broadcastWith
+        //  FIX: Add logging to broadcastWith
         \Log::info('DisplayTestMessage broadcastWith:', ['data' => $data]);
 
         return $data;
