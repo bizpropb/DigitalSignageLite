@@ -19,31 +19,26 @@ Digital signage system with Laravel backend (Filament admin), React frontend, an
 
 ## Setup
 
-### 1. Start Database
+### 1. Start Database & Install Dependencies
+
+**Only if needed:**
 ```bash
-# 1. start
-docker compose down
-docker volume rm presenter-v4_postgres_data   # optional, wipes old db
-docker compose up -d
+docker volume rm presenter-v4_postgres_data   # optional, wipes old db, use only if needed
 ```
 
-### 2. Install Dependencies
-
-**Backend:**
+**Start DB & Dependencies Install (once):**
 ```bash
+docker compose down
+docker compose up -d
 cd backend
 composer install
 cd ..
-```
-
-**Frontend:**
-```bash
 cd frontend
 npm install
 cd ..
 ```
 
-### 3. Setup Database ⚠️ Execute this command only once for the setup!
+### Only once: ⚠️ Execute this command only once for the setup! 
 ```bash
 cd backend
 php artisan config:clear
@@ -55,12 +50,15 @@ cd ..
 Run "services.msc", find "postgresql-xxx-xx", stop it. Do step 1 again, then step 3.
 If that didnt help, "run netstat -ano | findstr :5432" and stop these services (might require a restart afterwards)
 
+--------------------------------------------
+
 ### 4. Start Applications
 
 **Laravel Logs (Optional) - Terminal 1:**
 ```bash
 cd backend
-Get-Content storage/logs/laravel.log -Wait -Tail 0 # Shows Laravel logs in real-time. Only displays major events and things flagged to log. (mostly useless tbh)
+Get-Content storage/logs/laravel.log -Wait -Tail 0 
+# Shows Laravel logs in real-time. Only displays major events and things flagged to log. (mostly useless tbh)
 ```
 
 **Backend (Laravel + Filament) - Terminal 2:**
@@ -85,7 +83,14 @@ php artisan queue:work
 ```
 Processes broadcast jobs and sends them to WebSocket server.
 
-**Frontend (React) - Terminal 5:**
+**Content Scheduler - Terminal 5:**
+```bash
+cd backend
+php artisan content:schedule start
+```
+Manages content rotation and broadcasts to live displays.
+
+**Frontend (React) - Terminal 6:**
 ```bash
 cd frontend
 npm run dev
