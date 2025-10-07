@@ -166,8 +166,8 @@ const LiveDisplay = () => {
     };
     initialize();
 
-    // Fetch display info every 30 seconds to check for program changes
-    const interval = setInterval(fetchDisplayInfo, 30000);
+    // Fetch display info every 60 seconds to check for program changes
+    const interval = setInterval(fetchDisplayInfo, 60000);
     
     return () => {
       clearInterval(interval)
