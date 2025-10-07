@@ -1,5 +1,5 @@
 // LiveDisplay.jsx
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Pusher from 'pusher-js'
 import * as jose from 'jose'
 import DisplayInfo from './DisplayInfo'
@@ -19,6 +19,7 @@ const LiveDisplay = () => {
   const countdownIntervalRef = useRef(null)
   const pusherRef = useRef(null) // Ref to track pusher instance
   const logContainerRef = useRef(null) // Ref for log container auto-scroll
+  const lastEmbedCodeRef = useRef(null) // Track last embed code to prevent re-injection
 
   // Add system log entry
   const addSystemLog = (message) => {
@@ -332,47 +333,56 @@ const LiveDisplay = () => {
   useEffect(() => {
     if (!currentContent || !iframeRef.current) return
 
-    const iframe = iframeRef.current
-    
-    // If URL changed, reload the iframe content  
-    if (iframe.src !== currentContent.url) {
-      addSystemLog(`🌐 Loading new URL: ${currentContent.url}`);
-      console.log('LiveDisplay: Loading new URL:', currentContent.url)
-      setIframeLoaded(false)
-      if (iframe.load) {
-        iframe.load(currentContent.url)
-      } else {
-        iframe.src = currentContent.url
-      }
-    }
-    
-    // Wait for iframe to load
-    const handleIframeLoad = () => {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
-        if (!iframeDoc) return
+    if (currentContent.type.toLowerCase() === 'link') {
+      const iframe = iframeRef.current
 
-        addSystemLog(`🎬 Starting animation: ${currentContent.animation}`);
-        console.log('LiveDisplay: Starting animation:', currentContent.animation)
+      // If URL changed, reload the iframe content
+      if (iframe.src !== currentContent.url) {
+        addSystemLog(`🌐 Loading new URL: ${currentContent.url}`);
+        console.log('LiveDisplay: Loading new URL:', currentContent.url)
+        setIframeLoaded(false)
+        if (iframe.load) {
+          iframe.load(currentContent.url)
+        } else {
+          iframe.src = currentContent.url
+        }
+      }
+
+      // Wait for iframe to load
+      const handleIframeLoad = () => {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+          if (!iframeDoc) return
+
+          addSystemLog(`🎬 Starting animation: ${currentContent.animation}`);
+          console.log('LiveDisplay: Starting animation:', currentContent.animation)
+          setIframeLoaded(true)
+          startScrollAnimation(iframeDoc, currentContent.animation, currentContent.animation_speed || 1)
+        } catch (error) {
+          addSystemLog(`❌ Iframe access error: ${error.message}`);
+          console.error('LiveDisplay: Error accessing iframe content:', error)
+        }
+      }
+
+      iframe.addEventListener('load', handleIframeLoad)
+
+      // If already loaded, start animation immediately
+      if (iframe.contentDocument?.readyState === 'complete') {
+        handleIframeLoad()
+      }
+
+      return () => {
+        iframe.removeEventListener('load', handleIframeLoad)
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current)
+        }
+      }
+    } else if (currentContent.type.toLowerCase() === 'embedding') {
+      if (lastEmbedCodeRef.current !== currentContent.embed_code) {
+        addSystemLog(`📺 Rendering embedding: ${currentContent.name}`);
+        console.log('LiveDisplay: Rendering embedding:', currentContent.name)
+        lastEmbedCodeRef.current = currentContent.embed_code
         setIframeLoaded(true)
-        startScrollAnimation(iframeDoc, currentContent.animation, currentContent.animation_speed || 1)
-      } catch (error) {
-        addSystemLog(`❌ Iframe access error: ${error.message}`);
-        console.error('LiveDisplay: Error accessing iframe content:', error)
-      }
-    }
-
-    iframe.addEventListener('load', handleIframeLoad)
-    
-    // If already loaded, start animation immediately
-    if (iframe.contentDocument?.readyState === 'complete') {
-      handleIframeLoad()
-    }
-
-    return () => {
-      iframe.removeEventListener('load', handleIframeLoad)
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
       }
     }
   }, [currentContent])
@@ -484,19 +494,14 @@ const LiveDisplay = () => {
     animate()
   }
 
-  // Render offline screen
-  if (isOffline) {
-    return (
-      <div className="offline-screen">
-        <div className="offline-icon">📡</div>
-        <h1>Display Offline</h1>
-        <p>Attempting to reconnect...</p>
-      </div>
-    )
-  }
-
   // Always show standby when not loaded or no content
   const showStandby = !currentContent || !iframeLoaded
+
+  // Memoize embed HTML to prevent iframe reloads on re-renders
+  const embedHtml = useMemo(() =>
+    currentContent?.embed_code ? { __html: currentContent.embed_code } : null,
+    [currentContent?.embed_code]
+  );
 
   // Render content based on type
   const renderContent = () => {
@@ -509,6 +514,20 @@ const LiveDisplay = () => {
             ref={iframeRef}
             src={currentContent.url}
             className="content-iframe"
+          />
+        )
+
+      case 'embedding':
+        return (
+          <div
+            ref={iframeRef}
+            dangerouslySetInnerHTML={embedHtml}
+            className="content-iframe"
+            style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden'
+            }}
           />
         )
 
@@ -526,11 +545,17 @@ const LiveDisplay = () => {
   return (
     <div className="full-screen">
       {renderContent()}
-      {showStandby && (
+      {isOffline ? (
+        <div className="offline-overlay">
+          <div className="offline-icon">📡</div>
+          <h1>Display Offline</h1>
+          <p>Attempting to reconnect...</p>
+        </div>
+      ) : showStandby && (
         <div className="standby-overlay">
           <h1 className="h1">Presenter V4 - /Live</h1>
           <p className="page-description">
-            Ready to broadcast, just one moment...
+            I'm waiting for the next signal, it might take a moment...
           </p>
           <DisplayInfo
             displayInfo={displayInfo}
