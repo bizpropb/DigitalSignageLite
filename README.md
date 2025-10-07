@@ -12,7 +12,7 @@ A **browser-first** signage lite network built on three moving parts:
 
 
 The communication between front- and backend is secured via a JWT, completely negating any access outside of the admin interface. 
-This is why the `dangerouslySetInnerHTML` is not nearly as dangerous as it sounds, given your admin won't infect your own device with a virus.
+`dangerouslySetInnerHTML` isnt' actually dangerous. it completely rejects javascript injections and only allows HTML/CSS.
 
 This system is meant to be used to display embeddings of:
 - https://www.youtube.com/ 
