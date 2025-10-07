@@ -20,6 +20,7 @@ const LiveDisplay = () => {
   const pusherRef = useRef(null) // Ref to track pusher instance
   const logContainerRef = useRef(null) // Ref for log container auto-scroll
   const lastEmbedCodeRef = useRef(null) // Track last embed code to prevent re-injection
+  const offlineDisplayTimestamp = useRef(null) // Track when offline overlay was shown
 
   // Add system log entry
   const addSystemLog = (message) => {
@@ -207,7 +208,24 @@ const LiveDisplay = () => {
       addSystemLog('🔌 WebSocket connected'); // Log successful connection
       console.log('LiveDisplay: WebSocket connected'); // Debug log
       setConnectionStatus('connected'); // Update UI connection status
-      setIsOffline(false); // Clear offline state
+
+      // Respect 5-second minimum display lock
+      if (offlineDisplayTimestamp.current) {
+        const elapsedTime = Date.now() - offlineDisplayTimestamp.current
+        const remainingTime = 5000 - elapsedTime
+
+        if (remainingTime > 0) {
+          addSystemLog(`⏳ Waiting ${Math.ceil(remainingTime/1000)}s before hiding offline overlay`)
+          setTimeout(() => {
+            setIsOffline(false)
+            offlineDisplayTimestamp.current = null
+          }, remainingTime)
+        } else {
+          setIsOffline(false)
+          offlineDisplayTimestamp.current = null
+        }
+      }
+
       if (offlineTimeoutRef.current) { // Clear any pending offline timeout
         clearTimeout(offlineTimeoutRef.current); // Cancel offline detection timer
       }
@@ -218,7 +236,11 @@ const LiveDisplay = () => {
       addSystemLog('🔌 WebSocket disconnected'); // Log disconnection
       console.log('LiveDisplay: WebSocket disconnected'); // Debug log
       setConnectionStatus('disconnected'); // Update UI connection status
-      startOfflineTimeout(); // Start offline detection timer
+
+      // Immediately show offline overlay and record timestamp
+      setIsOffline(true)
+      offlineDisplayTimestamp.current = Date.now()
+      addSystemLog('⚠️ Displaying offline overlay (locked for 5s minimum)')
     });
 
     // WEBSOCKET ERROR EVENT - Fired when connection errors occur
@@ -226,7 +248,11 @@ const LiveDisplay = () => {
       addSystemLog(`❌ WebSocket error: ${error?.error?.data?.message || error.message || 'Unknown'}`); // Log error details
       console.error('LiveDisplay: WebSocket connection error:', error); // Console error log with full error object
       setConnectionStatus('error'); // Update UI connection status to error
-      startOfflineTimeout(); // Start offline detection timer
+
+      // Immediately show offline overlay and record timestamp
+      setIsOffline(true)
+      offlineDisplayTimestamp.current = Date.now()
+      addSystemLog('⚠️ Displaying offline overlay (locked for 5s minimum)')
     });
 
     // WEBSOCKET CHANNEL SUBSCRIPTION - CRITICAL FOR RECEIVING CONTENT UPDATES
@@ -310,15 +336,11 @@ const LiveDisplay = () => {
     }
   }, [displayInfo.program]);
 
-  // Offline detection
+  // Offline detection functions (no longer used, kept for compatibility)
   const startOfflineTimeout = () => {
     if (offlineTimeoutRef.current) {
       clearTimeout(offlineTimeoutRef.current)
     }
-    offlineTimeoutRef.current = setTimeout(() => {
-      addSystemLog('⚠️ Offline timeout reached');
-      setIsOffline(true)
-    }, 5000) // 5 seconds
   }
 
   const resetOfflineTimeout = () => {
@@ -545,13 +567,29 @@ const LiveDisplay = () => {
   return (
     <div className="full-screen">
       {renderContent()}
-      {isOffline ? (
-        <div className="offline-overlay">
-          <div className="offline-icon">📡</div>
-          <h1>Display Offline</h1>
-          <p>Attempting to reconnect...</p>
+
+      {/* Offline overlay - renders ABOVE content when WebSocket is unreachable */}
+      {isOffline && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            zIndex: 9999,
+            backgroundColor: 'white',
+            color: 'black',
+            textAlign: 'center',
+            padding: '10px 0',
+          }}
+        >
+          <p style={{ fontSize: '14px', fontWeight: 'bold' }}>DISPLAY FAILED TO REACH YOUR SERVER</p>
+          <p style={{ fontSize: '12px' }}>please check your connection</p>
         </div>
-      ) : showStandby && (
+      )}
+
+      {/* Standby overlay - only shows when no content loaded */}
+      {showStandby && (
         <div className="standby-overlay">
           <h1 className="h1">Presenter V4 - /Live</h1>
           <p className="page-description">
