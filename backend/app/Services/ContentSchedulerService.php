@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Item;
 use App\Models\Link;
+use App\Models\Embedding;
 use App\Models\Program;
 use App\Events\ProgramContentUpdate;
 use Illuminate\Support\Facades\Log;
@@ -179,6 +180,16 @@ class ContentSchedulerService
                     $contentData['url'] = 'https://example.com';
                     $contentData['animation'] = 'none';
                     $contentData['animation_speed'] = 1;
+                }
+                break;
+
+            case 'embedding':
+                $embedding = Embedding::where('item_id', $item->id)->first();
+                if ($embedding) {
+                    $contentData['embed_code'] = $embedding->embed_code;
+                } else {
+                    Log::warning("ContentScheduler: Embedding data not found for item {$item->id}");
+                    $contentData['embed_code'] = '<div>Embedding not found</div>';
                 }
                 break;
 
