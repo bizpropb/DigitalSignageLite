@@ -1,4 +1,3 @@
-// RegisterAndTest.jsx
 import { useState, useEffect } from 'react'
 import Pusher from 'pusher-js'
 import * as jose from 'jose'
@@ -19,6 +18,9 @@ function RegisterAndTest() {
     access_token: null,
     created_at: null
   })
+  const [testResults, setTestResults] = useState(Array(50).fill(null))
+  const [isTestRunning, setIsTestRunning] = useState(false)
+  const [pusherInstance, setPusherInstance] = useState(null)
 
   // Function to find display by access token
   const findDisplayByToken = async () => {
@@ -224,6 +226,40 @@ function RegisterAndTest() {
     }
   }
 
+  // Function to start connection stability test
+  const startStabilityTest = () => {
+    if (isTestRunning || !pusherInstance) return
+
+    // Reset results
+    setTestResults(Array(50).fill(null))
+    setIsTestRunning(true)
+
+    let pingCount = -1 // Ensures the loop starts with Div Index 0, instead of 1
+
+    // Run first check immediately
+    const runCheck = () => {
+      const state = pusherInstance.connection.state
+      const result = state === 'connected' ? 'pass' : 'fail'
+
+      setTestResults(prev => {
+        const newResults = [...prev]
+        newResults[pingCount] = result
+        return newResults
+      })
+
+      pingCount++
+
+      if (pingCount >= 50) {
+        clearInterval(testInterval)
+        setIsTestRunning(false)
+      }
+    }
+
+    runCheck() // Immediate first check
+
+    const testInterval = setInterval(runCheck, 200) // Then every 200ms
+  }
+
   useEffect(() => {
     // Initialize public key immediately
     const initializePublicKey = async () => {
@@ -250,6 +286,9 @@ function RegisterAndTest() {
       cluster: 'mt1', // Required by Pusher.js
       encrypted: false,
     })
+
+    // Store pusher instance for stability test
+    setPusherInstance(pusher)
 
     //  FIX: Enhanced Pusher state logging
     pusher.connection.bind('state_change', states => {
@@ -492,6 +531,64 @@ function RegisterAndTest() {
         </div>
       </div>
 
+      {/* Connection Stability Test */}
+      <div className="messages-container" style={{ marginBottom: '20px' }}>
+        <h3 className="h3">Connection Stability Test</h3>
+
+        <div style={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          marginLeft: '4px',
+          gap: '8px',
+          height: '40px',
+          marginBottom: '10px',
+          alignItems: 'stretch'
+        }}>
+          <button
+            onClick={startStabilityTest}
+            disabled={isTestRunning || !pusherInstance}
+            style={{
+              padding: '0px 0px',
+              fontSize: '16px',
+              width: '240px',
+              justifyContent: 'center',
+              cursor: isTestRunning ? 'not-allowed' : 'pointer',
+              opacity: isTestRunning ? 0.6 : 1,
+              height: '100%',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: '4px',
+              backgroundColor: '#141414',
+              border: '1px solid #ea580c',
+              color: '#ea580c'
+            }}
+          >
+            {isTestRunning ? 'Test Running...' : 'Start Connection Stability Test'}
+          </button>
+
+          {testResults.map((result, index) => (
+            <div
+              key={index}
+              style={{
+                flex: 1,
+                height: '100%',
+                borderRadius: '4px',
+                backgroundColor: result === 'pass' ? '#22c55e' : result === 'fail' ? '#ef4444' : '#9ca3af',
+                transition: 'background-color 0.2s'
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Status Text */}
+        <p className="no-messages">
+          {testResults.some(r => r !== null)
+            ? "green means passed, red means failed, interval is 200ms - sporadic connection issues may not affect actual display performance."
+            : "Hit the 'Start Connection Stability Test' button above to start the test"
+          }
+        </p>
+      </div>
 
       {/* Messages */}
       <div className="messages-container">
