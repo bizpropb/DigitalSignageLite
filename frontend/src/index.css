@@ -27,7 +27,7 @@ html, body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  font-size: 1.1rem; /* Slightly increased for TV screens */
+  font-size: 1rem;
 
   color-scheme: dark;
   --bg-primary: #0a0a0a;        /* Pure black */
@@ -68,7 +68,7 @@ a:hover {
   border-radius: 6px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
-  font-size: 1.1em;
+  font-size: 0.9em;
   font-weight: 500;
   font-family: inherit;
   background-color: var(--bg-secondary);
@@ -113,7 +113,7 @@ a:hover {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  font-size: 1.1em;
+  font-size: 0.9em;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   text-transform: uppercase;
@@ -131,7 +131,7 @@ a:hover {
 .h3 {
   margin: 0 0 15px 0;
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
 }
 
 /* Containers */
@@ -176,7 +176,7 @@ a:hover {
 
 .text-accent {
   color: var(--accent-orange);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: bold;
 }
 
@@ -218,7 +218,7 @@ a:hover {
   border: 1px solid var(--accent-orange);
   border-radius: 6px;
   padding: 20px;
-  margin: 0 20px 30px 20px;
+  margin: 0;
 }
 
 .info-grid {
@@ -229,7 +229,7 @@ a:hover {
 }
 
 .info-item {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .label {
@@ -272,7 +272,7 @@ a:hover {
   justify-content: center;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 2rem;
+  font-size: 1.3rem;
   text-align: center;
 }
 
@@ -333,28 +333,26 @@ a:hover {
 }
 
 .page-title {
-  margin: 0 0 10px 0;
+  margin: 0 0 0 0;
   color: var(--accent-orange);
-  font-size: 2rem;
+  font-size: 1.3rem;
 }
 
 .page-description {
-  margin: 0 0 20px 0;
+  margin: 0 0 0 0;
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .access-token-info {
-  margin-top: 20px;
   background-color: var(--bg-secondary);
-  border: 1px solid var(--info-color);
+  border: 1px solid var(--accent-orange);
   border-radius: 6px;
   padding: 16px;
-  margin: 0 20px 20px 20px;
+  margin: 0 0 20px 0;
 }
 
 .info-icon {
-  color: var(--info-color);
   margin-right: 12px;
   font-size: 20px;
   line-height: 20px;
@@ -368,12 +366,12 @@ a:hover {
 .info-text {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.4;
 }
 
 .info-strong {
-  color: var(--info-color);
+  color: var(--accent-orange);
 }
 
 .messages-container {
@@ -381,7 +379,7 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 20px;
-  margin: 0 20px;
+  margin: 0 0 20px 0;
 }
 
 .no-messages {
@@ -429,7 +427,7 @@ a:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 2rem;
+  font-size: 1.3rem;
   font-family: inherit;
 }
 

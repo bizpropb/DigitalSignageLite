@@ -8,6 +8,7 @@ function RegisterAndTest() {
   const [messages, setMessages] = useState([])
   const [accessToken, setAccessToken] = useState('')
   const [isRegistered, setIsRegistered] = useState(false)
+  const showRegistrationForm = true
   const [serverPublicKey, setServerPublicKey] = useState(null)
   const [displayInfo, setDisplayInfo] = useState({
     id: null,
@@ -499,24 +500,56 @@ function RegisterAndTest() {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">Presenter V4 - Register & Test</h1>
-      <p className="page-description">
-        Register your display device and test WebSocket messaging
-      </p>
-      <DisplayInfo
-        displayInfo={displayInfo}
-        isRegistered={isRegistered}
-        showRegistrationForm={true}
-        accessToken={accessToken}
-        onAccessTokenChange={setAccessToken}
-        onConnect={findDisplayByToken}
-      />
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0px',
+        marginBottom: '10px'
+      }}>
+        <div>
+          <h1 className="page-title">Presenter V4 - Register & Test</h1>
+          <p className="page-description">
+            Register your display device and test WebSocket messaging
+          </p>
+        </div>
+        {showRegistrationForm && (
+          <div className="form-group" style={{ margin: 0 }}>
+            {!isRegistered && (
+              <input
+                type="text"
+                value={accessToken}
+                onChange={(e) => setAccessToken(e.target.value.toUpperCase())}
+                placeholder="Enter 6-char token"
+                maxLength="6"
+                className="input"
+              />
+            )}
+            <button
+              onClick={findDisplayByToken}
+              disabled={accessToken.length !== 6 || isRegistered}
+              style={isRegistered ? {
+                backgroundColor: '#141414',
+                color: 'white',
+                border: '1px solid #ff6600',
+                cursor: 'default',
+                fontWeight: 'normal',
+              } : {}}
+              className={`button button-primary ${accessToken.length !== 6 && !isRegistered ? 'button-primary-disabled' : ''}`}
+            >
+              {isRegistered ? 'Connected' : 'Enter'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Access Token Information */}
       <div className="access-token-info">
         <div className="info-content">
-          <div className="info-icon">
-            ℹ️
+          <div className="">
+          <h1>{'{i}'}</h1>
           </div>
           <div>
             <div className="info-text">
@@ -531,9 +564,47 @@ function RegisterAndTest() {
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+        <DisplayInfo
+          displayInfo={displayInfo}
+          isRegistered={isRegistered}
+          showRegistrationForm={false}
+        />
+
+        {/* Messages */}
+        <div className="messages-container" style={{ border: '1px solid #ff6600', margin: 0 }}>
+          <h3 className="h3 text-accent">Test-Message-System</h3>
+          {messages.length === 0 ? (
+            <p className="no-messages">
+              No messages received yet.
+              <br />Send a test message from the admin panel.
+              <br />Messages are temporary and not saved in the database.
+            </p>
+          ) : (
+            <div className="log-container">
+              {messages.map(msg => (
+                <div key={msg.id} className="message-entry">
+                  <div className="message-time">
+                    <span>{msg.timestamp}</span>
+                    {msg.verified && (
+                      <span className="verified-badge">
+                        🔒 VERIFIED
+                      </span>
+                    )}
+                  </div>
+                  <div className="message-content">
+                    {msg.message}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Connection Stability Test */}
-      <div className="messages-container" style={{ marginBottom: '20px' }}>
-        <h3 className="h3">Connection Stability Test</h3>
+      <div className="messages-container" style={{ border: '1px solid #ff6600' }}>
+        <h3 className="h3 text-accent">Connection Stability Test</h3>
 
         <div style={{
           display: 'flex',
@@ -561,7 +632,7 @@ function RegisterAndTest() {
               borderRadius: '4px',
               backgroundColor: '#141414',
               border: '1px solid #ea580c',
-              color: '#ea580c'
+              color: 'white'
             }}
           >
             {isTestRunning ? 'Test Running...' : 'Start Connection Stability Test'}
@@ -589,35 +660,6 @@ function RegisterAndTest() {
           }
         </p>
       </div>
-
-      {/* Messages */}
-      <div className="messages-container">
-        <h3 className="h3">Test-Message-System</h3>
-        {messages.length === 0 ? (
-          <p className="no-messages">
-            No messages received yet.
-            <br />Send a test message from the admin panel.
-            <br />Messages are temporary and not saved in the database.
-          </p>
-        ) : (
-          <div className="log-container">
-            {messages.map(msg => (
-              <div key={msg.id} className="message-entry">
-                <div className="message-time">
-                  <span>{msg.timestamp}</span>
-                  {msg.verified && (
-                    <span className="verified-badge">
-                      🔒 VERIFIED
-                    </span>
-                  )}
-                </div>
-                <div className="message-content">
-                  {msg.message}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

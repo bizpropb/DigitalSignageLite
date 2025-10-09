@@ -12,9 +12,9 @@ const DisplayInfo = ({
 
   return (
     <>
-      {showRegistrationForm && !isRegistered && (
-        <div className="registration-form">
-          <div className="form-group">
+      {showRegistrationForm && (
+        <div className="form-group" style={{ margin: 0 }}>
+          {!isRegistered && (
             <input
               type="text"
               value={accessToken}
@@ -23,14 +23,21 @@ const DisplayInfo = ({
               maxLength="6"
               className="input"
             />
-            <button
-              onClick={onConnect}
-              disabled={accessToken.length !== 6}
-              className={`button button-primary ${accessToken.length !== 6 ? 'button-primary-disabled' : ''}`}
-            >
-              Connect
-            </button>
-          </div>
+          )}
+          <button
+            onClick={onConnect}
+            disabled={accessToken.length !== 6 || isRegistered}
+            style={isRegistered ? {
+              backgroundColor: '#141414',
+              color: 'white',
+              border: '1px solid #22c55e',
+              cursor: 'default',
+              fontWeight: 'normal'
+            } : {}}
+            className={`button button-primary ${accessToken.length !== 6 && !isRegistered ? 'button-primary-disabled' : ''}`}
+          >
+            {isRegistered ? 'Connected' : 'Connect'}
+          </button>
         </div>
       )}
 
@@ -54,12 +61,6 @@ const DisplayInfo = ({
             <strong className="label">Created:</strong> <span className="value">{displayInfo.created_at ? new Date(displayInfo.created_at).toLocaleDateString('de-DE') : 'Unknown'}</span>
           </div>
         </div>
-        
-        {isRegistered && (
-          <div className="success-message">
-            ✅ Display successfully connected
-          </div>
-        )}
       </div>
 
     </>
