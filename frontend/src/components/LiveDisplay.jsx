@@ -535,7 +535,7 @@ const LiveDisplay = () => {
             is="x-frame-bypass"
             ref={iframeRef}
             src={currentContent.url}
-            className="content-iframe"
+            style={{ width: '100vw', height: '100vh', border: 'none' }}
           />
         )
 
@@ -544,10 +544,10 @@ const LiveDisplay = () => {
           <div
             ref={iframeRef}
             dangerouslySetInnerHTML={embedHtml}
-            className="content-iframe"
             style={{
-              width: '100%',
-              height: '100%',
+              width: '100vw',
+              height: '100vh',
+              border: 'none',
               overflow: 'hidden'
             }}
           />
@@ -555,7 +555,7 @@ const LiveDisplay = () => {
 
       default:
         return (
-          <div className="unsupported-content">
+          <div style={{ width: '100vw', height: '100vh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.3rem', fontFamily: 'inherit' }}>
             <div>Unsupported Content Type: {currentContent.type}</div>
           </div>
         )
@@ -565,7 +565,7 @@ const LiveDisplay = () => {
 
   // Main render: always show content container, overlay standby if needed
   return (
-    <div className="full-screen">
+    <div style={{ margin: 0, padding: 0, overflow: 'hidden', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       {renderContent()}
 
       {/* Offline overlay - renders ABOVE content when WebSocket is unreachable */}
@@ -584,15 +584,15 @@ const LiveDisplay = () => {
           }}
         >
           <p style={{ fontSize: '14px', fontWeight: 'bold' }}>DISPLAY FAILED TO REACH YOUR SERVER</p>
-          <p style={{ fontSize: '12px' }}>please check your connection</p>
+          <p style={{ fontSize: '12px' }}>attempting reconnection in five seconds</p>
         </div>
       )}
 
       {/* Standby overlay - only shows when no content loaded */}
       {showStandby && (
-        <div className="standby-overlay">
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#0a0a0a', zIndex: 1000, overflowY: 'auto', padding: '20px', boxSizing: 'border-box', fontFamily: 'inherit' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <h1 className="h1">Presenter V4 - Live Display</h1>
+            <h1 style={{ fontSize: '2.5rem', margin: 0, color: 'var(--accent-orange)', lineHeight: 1.1 }}>Presenter V4 - Live Display</h1>
             <p className="page-description" style={{ marginBottom: '15px' }}>
               I'm waiting for the next signal, it might take a moment...
             </p>
@@ -605,13 +605,13 @@ const LiveDisplay = () => {
             </div>
 
             {!displayInfo.program && (
-              <div className="no-program-message">
+              <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '15px', margin: '20px 0', color: 'var(--text-secondary)' }}>
                 <strong className="text-accent">No Program Assigned</strong> - This display is not assigned to any program yet.
               </div>
             )}
 
-            <div className="message-box">
-              <h3 className="h3">System Activity Log</h3>
+            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', marginBottom: '20px' }}>
+              <h3 className="h3 text-accent">System Activity Log</h3>
               {systemLogs.length === 0 ? (
                 <p className="no-messages">
                   No activity yet. System is initializing...

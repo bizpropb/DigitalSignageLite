@@ -5,7 +5,7 @@ function Index() {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>
+      <h1 style={{ color: 'var(--accent-orange)' }}>
         Presenter V4
       </h1>
 
@@ -32,7 +32,7 @@ function Index() {
 
           <div className="info-card">
             <strong className="text-accent">Quick Setup:</strong>
-            <div className="quick-setup">
+            <div style={{ color: 'var(--text-secondary)' }}>
               Navigate to <strong>/register</strong> to register device with the system.
               Use <strong>/live</strong> for receiving and displaying content signals.
             </div>

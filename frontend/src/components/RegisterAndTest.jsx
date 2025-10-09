@@ -499,7 +499,7 @@ function RegisterAndTest() {
 
 
   return (
-    <div className="page-container">
+    <div style={{ backgroundColor: 'var(--bg-primary)', padding: '20px 20px 0 20px', fontFamily: 'inherit' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{
         display: 'flex',
@@ -510,7 +510,7 @@ function RegisterAndTest() {
         marginBottom: '10px'
       }}>
         <div>
-          <h1 className="page-title">Presenter V4 - Register & Test</h1>
+          <h1 style={{ margin: '0 0 0 0', color: 'var(--accent-orange)', fontSize: '1.3rem' }}>Presenter V4 - Register & Test</h1>
           <p className="page-description">
             Register your display device and test WebSocket messaging
           </p>
@@ -531,9 +531,9 @@ function RegisterAndTest() {
               onClick={findDisplayByToken}
               disabled={accessToken.length !== 6 || isRegistered}
               style={isRegistered ? {
-                backgroundColor: '#141414',
-                color: 'white',
-                border: '1px solid #ff6600',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--accent-orange)',
                 cursor: 'default',
                 fontWeight: 'normal',
               } : accessToken.length !== 6 ? {
@@ -548,14 +548,14 @@ function RegisterAndTest() {
       </div>
 
       {/* Access Token Information */}
-      <div className="access-token-info">
-        <div className="info-content">
-          <div style={{marginRight: '15px'}}>
+      <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '16px', margin: '0 0 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{marginRight: '15px' }}>
           <h1>{'{i}'}</h1>
           </div>
           <div>
-            <div className="info-text">
-              <strong className="info-strong">Access Token System</strong>
+            <div style={{ margin: 0, lineHeight: 1.4 }}>
+              <strong style={{ color: 'var(--accent-orange)' }}>Access Token System</strong>
               <div>
               Get your 6-character access token from the admin panel by creating a new display device.
               Each token is unique and connects this browser to a specific display configuration.
@@ -574,8 +574,8 @@ function RegisterAndTest() {
         />
 
         {/* Messages */}
-        <div className="messages-container" style={{ border: '1px solid #ff6600', margin: 0 }}>
-          <h3 className="h3 text-accent">Test-Message-System</h3>
+        <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', margin: 0 }}>
+          <h3 className="h3 text-accent">Test Message System</h3>
           {messages.length === 0 ? (
             <p className="no-messages">
               No messages received yet.
@@ -605,14 +605,14 @@ function RegisterAndTest() {
       </div>
 
       {/* Connection Stability Test */}
-      <div className="messages-container" style={{ border: '1px solid #ff6600' }}>
+      <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px' }}>
         <h3 className="h3 text-accent">Connection Stability Test</h3>
 
         <div style={{
           display: 'flex',
           flexWrap: 'nowrap',
           marginLeft: '4px',
-          gap: '8px',
+          gap: '6px',
           height: '40px',
           marginBottom: '10px',
           alignItems: 'stretch'
@@ -623,7 +623,7 @@ function RegisterAndTest() {
             style={{
               padding: '0px 0px',
               fontSize: '16px',
-              width: '240px',
+              width: '100px',
               justifyContent: 'center',
               cursor: isTestRunning ? 'not-allowed' : 'pointer',
               opacity: isTestRunning ? 0.6 : 1,
@@ -632,12 +632,12 @@ function RegisterAndTest() {
               display: 'flex',
               alignItems: 'center',
               borderRadius: '4px',
-              backgroundColor: '#141414',
-              border: '1px solid #ea580c',
-              color: 'white'
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--accent-orange)',
+              color: 'var(--text-secondary)'
             }}
           >
-            {isTestRunning ? 'Test Running...' : 'Start Connection Stability Test'}
+            {isTestRunning ? 'Running...' : 'Start'}
           </button>
 
           {testResults.map((result, index) => (
@@ -655,7 +655,7 @@ function RegisterAndTest() {
         </div>
 
         {/* Status Text */}
-        <p className="no-messages">
+        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
           {testResults.some(r => r !== null)
             ? "green means passed, red means failed, interval is 200ms - sporadic connection issues may not affect actual display performance."
             : "Hit the 'Start Connection Stability Test' button above to start the test"

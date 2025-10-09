@@ -42,23 +42,23 @@ const DisplayInfo = ({
       )}
 
       {/* Display Information */}
-      <div className="display-info-card">
-        <h3 className="h3 text-accent">Display Registration</h3>
-        <div className="info-grid">
-          <div className="info-item">
-            <strong className="label">Name:</strong> <span className="value">{displayInfo.name || 'Not registered'}</span>
+      <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', margin: 0 }}>
+        <h3 className="h3 text-accent">Display Info</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+          <div>
+            Name: {displayInfo.name || 'Not registered'}
           </div>
-          <div className="info-item">
-            <strong className="label">Program:</strong> <span className="value">{displayInfo.program?.name || displayInfo.program || 'Not set'}</span>
+          <div>
+            Program: {displayInfo.program?.name || displayInfo.program || 'Not set'}
           </div>
-          <div className="info-item">
-            <strong className="label">Location:</strong> <span className="value">{displayInfo.location || 'Not registered'}</span>
+          <div>
+            Location: {displayInfo.location || 'Not registered'}
           </div>
-          <div className="info-item">
-            <strong className="label">Access Token:</strong> <span className="value">{displayInfo.access_token || 'Not connected'}</span>
+          <div>
+            Access Token: {displayInfo.access_token || 'Not connected'}
           </div>
-          <div className="info-item">
-            <strong className="label">Created:</strong> <span className="value">{displayInfo.created_at ? new Date(displayInfo.created_at).toLocaleDateString('de-DE') : 'Unknown'}</span>
+          <div>
+            Created: {displayInfo.created_at ? new Date(displayInfo.created_at).toLocaleDateString('de-DE') : 'Unknown'}
           </div>
         </div>
       </div>
