@@ -16,4 +16,9 @@ class EditProgram extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record->getKey()]));
+    }
 }
