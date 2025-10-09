@@ -536,6 +536,8 @@ function RegisterAndTest() {
                 border: '1px solid #ff6600',
                 cursor: 'default',
                 fontWeight: 'normal',
+              } : accessToken.length !== 6 ? {
+                color: '#000'
               } : {}}
               className={`button button-primary ${accessToken.length !== 6 && !isRegistered ? 'button-primary-disabled' : ''}`}
             >
@@ -548,7 +550,7 @@ function RegisterAndTest() {
       {/* Access Token Information */}
       <div className="access-token-info">
         <div className="info-content">
-          <div className="">
+          <div style={{marginRight: '15px'}}>
           <h1>{'{i}'}</h1>
           </div>
           <div>

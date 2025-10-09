@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 
 function Index() {
   return (
-    <div className="full-screen-center">
-      <div className="content-container">
-      <h1 className="h1">
+    <div style={{ padding: '20px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <h1>
         Presenter V4
       </h1>
 
-      <p className="page-description">
-        Modern Digital Signage System Solutions
+      <p style={{ marginBottom: '15px' }}>
+        Lightweight Digital Signage Solutions
       </p>
 
 
@@ -21,25 +21,12 @@ function Index() {
           <div className="info-card">
             <strong className="text-accent">Frontend Routes:</strong>
             <div className="text-mono">
-              <div className="text-accent">
-                <strong>/</strong> - You Are Here // click on a route to navigate to it
-              </div>
-              <div className="link-route">
-                <Link
-                  to="/register"
-                  className="link-route"
-                >
-                  <strong>/register</strong> - Register device with system // show status etc.
-                </Link>
-              </div>
-              <div className="link-route">
-                <Link
-                  to="/live"
-                  className="link-route"
-                >
-                  <strong>/live</strong> - Live content display
-                </Link>
-              </div>
+              <Link to="/register" className="link-route">
+                <strong>/register</strong> - Register device, show status, testing suite
+              </Link>
+              <Link to="/live" className="link-route">
+                <strong>/live</strong> - Live content display
+              </Link>
             </div>
           </div>
 
@@ -60,12 +47,9 @@ function Index() {
           <div className="info-card">
             <strong className="text-accent">Backend Routes:</strong>
             <div className="text-mono">
-              <div className="link-route">
+              <a href="http://localhost:8000/admin" target="_blank" rel="noopener noreferrer" className="link-route">
                 <strong>http://localhost:8000/admin</strong> - Admin panel
-              </div>
-              <div className="link-route">
-                <strong>http://localhost:8000/api/*</strong> - API endpoints
-              </div>
+              </a>
             </div>
           </div>
         </div>

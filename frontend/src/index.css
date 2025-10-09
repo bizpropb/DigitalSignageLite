@@ -182,20 +182,22 @@ a:hover {
 
 .text-mono {
   font-family: monospace;
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 
 .link-route {
   color: var(--text-secondary);
   transition: color 0.2s;
+  text-decoration: none;
+  display: block;
 }
 
 .link-route:hover {
-  color: var(--info-color);
+  color: var(--accent-orange);
 }
 
 .quick-setup {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: var(--text-secondary);
 }
 

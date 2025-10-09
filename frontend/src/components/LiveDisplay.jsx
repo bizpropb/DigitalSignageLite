@@ -591,38 +591,42 @@ const LiveDisplay = () => {
       {/* Standby overlay - only shows when no content loaded */}
       {showStandby && (
         <div className="standby-overlay">
-          <h1 className="h1">Presenter V4 - /Live</h1>
-          <p className="page-description">
-            I'm waiting for the next signal, it might take a moment...
-          </p>
-          <DisplayInfo
-            displayInfo={displayInfo}
-            isRegistered={!!displayInfo.program}
-            showRegistrationForm={false}
-          />
-
-          {!displayInfo.program && (
-            <div className="no-program-message">
-              <strong className="text-accent">No Program Assigned</strong> - This display is not assigned to any program yet.
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h1 className="h1">Presenter V4 - Live Display</h1>
+            <p className="page-description" style={{ marginBottom: '15px' }}>
+              I'm waiting for the next signal, it might take a moment...
+            </p>
+            <div style={{ marginBottom: '15px' }}>
+              <DisplayInfo
+                displayInfo={displayInfo}
+                isRegistered={!!displayInfo.program}
+                showRegistrationForm={false}
+              />
             </div>
-          )}
 
-          <div className="message-box">
-            <h3 className="h3">System Activity Log</h3>
-            {systemLogs.length === 0 ? (
-              <p className="no-messages">
-                No activity yet. System is initializing...
-              </p>
-            ) : (
-              <div ref={logContainerRef} className="log-container">
-                {systemLogs.map((log, index) => (
-                  <div key={index} className="log-entry">
-                    <span className="log-time">{log.time}</span>
-                    <span className="log-message">{log.message}</span>
-                  </div>
-                ))}
+            {!displayInfo.program && (
+              <div className="no-program-message">
+                <strong className="text-accent">No Program Assigned</strong> - This display is not assigned to any program yet.
               </div>
             )}
+
+            <div className="message-box">
+              <h3 className="h3">System Activity Log</h3>
+              {systemLogs.length === 0 ? (
+                <p className="no-messages">
+                  No activity yet. System is initializing...
+                </p>
+              ) : (
+                <div ref={logContainerRef} className="log-container">
+                  {systemLogs.map((log, index) => (
+                    <div key={index} className="log-entry">
+                      <span className="log-time">{log.time}</span>
+                      <span className="log-message">{log.message}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
