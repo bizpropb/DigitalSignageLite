@@ -8,7 +8,7 @@ const LiveDisplay = () => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected')
   const [currentContent, setCurrentContent] = useState(null)
   const [isOffline, setIsOffline] = useState(false)
-  const [displayInfo, setDisplayInfo] = useState({ program: null, name: null, location: null, auth_token: null, access_token: null })
+  const [displayInfo, setDisplayInfo] = useState({ program: null, program_id: null, name: null, location: null, auth_token: null, access_token: null })
   const [serverPublicKey, setServerPublicKey] = useState(null)
   const [currentChannel, setCurrentChannel] = useState('none')
   const [iframeLoaded, setIframeLoaded] = useState(false)
@@ -126,14 +126,15 @@ const LiveDisplay = () => {
             const newDisplayInfo = {
               id: data.display.id,
               program: data.display.program?.name || null,
+              program_id: data.display.program?.id || null,
               name: data.display.name,
               location: data.display.location,
               auth_token: data.display.auth_token,
               access_token: data.display.access_token
             }
-            
+
             setDisplayInfo(newDisplayInfo);
-            addSystemLog(`✅ Display info updated: ${newDisplayInfo.name} (${newDisplayInfo.program})`)
+            addSystemLog(`✅ Display info updated: ${newDisplayInfo.name} (Program: ${newDisplayInfo.program}, ID: ${newDisplayInfo.program_id})`)
           } else {
             addSystemLog('⚠️ No display found or no program assigned: ' + JSON.stringify(data))
           }
@@ -176,7 +177,7 @@ const LiveDisplay = () => {
 
   // WebSocket connection setup
   useEffect(() => {
-    addSystemLog(`Initializing WebSocket (program: ${displayInfo.program || 'none'})`); // Log initialization with current program
+    addSystemLog(`Initializing WebSocket (program: ${displayInfo.program || 'none'}, program_id: ${displayInfo.program_id || 'none'})`); // Log initialization with current program
     console.log('LiveDisplay: Initializing WebSocket connection'); // Debug log
 
     if (pusherRef.current) { // If there's an existing WebSocket connection
@@ -209,25 +210,17 @@ const LiveDisplay = () => {
       console.log('LiveDisplay: WebSocket connected'); // Debug log
       setConnectionStatus('connected'); // Update UI connection status
 
-      // Respect 5-second minimum display lock
-      if (offlineDisplayTimestamp.current) {
-        const elapsedTime = Date.now() - offlineDisplayTimestamp.current
-        const remainingTime = 5000 - elapsedTime
-
-        if (remainingTime > 0) {
-          addSystemLog(`⏳ Waiting ${Math.ceil(remainingTime/1000)}s before hiding offline overlay`)
-          setTimeout(() => {
-            setIsOffline(false)
-            offlineDisplayTimestamp.current = null
-          }, remainingTime)
-        } else {
-          setIsOffline(false)
-          offlineDisplayTimestamp.current = null
-        }
+      // Clear any pending offline detection timeout
+      if (offlineTimeoutRef.current) {
+        clearTimeout(offlineTimeoutRef.current)
+        offlineTimeoutRef.current = null
       }
 
-      if (offlineTimeoutRef.current) { // Clear any pending offline timeout
-        clearTimeout(offlineTimeoutRef.current); // Cancel offline detection timer
+      // Clear offline overlay if it's showing
+      if (isOffline) {
+        setIsOffline(false)
+        offlineDisplayTimestamp.current = null
+        addSystemLog('✅ Reconnected - offline overlay cleared')
       }
     });
 
@@ -237,10 +230,28 @@ const LiveDisplay = () => {
       console.log('LiveDisplay: WebSocket disconnected'); // Debug log
       setConnectionStatus('disconnected'); // Update UI connection status
 
-      // Immediately show offline overlay and record timestamp
-      setIsOffline(true)
-      offlineDisplayTimestamp.current = Date.now()
-      addSystemLog('⚠️ Displaying offline overlay (locked for 5s minimum)')
+      // Wait 5 seconds, then check if still disconnected before showing overlay
+      if (offlineTimeoutRef.current) {
+        clearTimeout(offlineTimeoutRef.current)
+      }
+
+      offlineTimeoutRef.current = setTimeout(() => {
+        // Check if STILL disconnected after 5 seconds
+        if (pusher.connection.state === 'disconnected' || pusher.connection.state === 'unavailable') {
+          addSystemLog('⚠️ Still offline after 5s - showing offline overlay for 15s')
+          setIsOffline(true)
+          offlineDisplayTimestamp.current = Date.now()
+
+          // Auto-hide after 15 seconds
+          setTimeout(() => {
+            setIsOffline(false)
+            offlineDisplayTimestamp.current = null
+            addSystemLog('✅ Offline overlay auto-hidden after 15s')
+          }, 15000)
+        } else {
+          addSystemLog('✅ Reconnected within 5s grace period - no offline overlay shown')
+        }
+      }, 5000)
     });
 
     // WEBSOCKET ERROR EVENT - Fired when connection errors occur
@@ -249,15 +260,33 @@ const LiveDisplay = () => {
       console.error('LiveDisplay: WebSocket connection error:', error); // Console error log with full error object
       setConnectionStatus('error'); // Update UI connection status to error
 
-      // Immediately show offline overlay and record timestamp
-      setIsOffline(true)
-      offlineDisplayTimestamp.current = Date.now()
-      addSystemLog('⚠️ Displaying offline overlay (locked for 5s minimum)')
+      // Wait 5 seconds, then check if still in error state before showing overlay
+      if (offlineTimeoutRef.current) {
+        clearTimeout(offlineTimeoutRef.current)
+      }
+
+      offlineTimeoutRef.current = setTimeout(() => {
+        // Check if STILL in error state after 5 seconds
+        if (pusher.connection.state === 'disconnected' || pusher.connection.state === 'unavailable' || pusher.connection.state === 'failed') {
+          addSystemLog('⚠️ Still offline after 5s (error state) - showing offline overlay for 15s')
+          setIsOffline(true)
+          offlineDisplayTimestamp.current = Date.now()
+
+          // Auto-hide after 15 seconds
+          setTimeout(() => {
+            setIsOffline(false)
+            offlineDisplayTimestamp.current = null
+            addSystemLog('✅ Offline overlay auto-hidden after 15s')
+          }, 15000)
+        } else {
+          addSystemLog('✅ Reconnected within 5s grace period - no offline overlay shown')
+        }
+      }, 5000)
     });
 
     // WEBSOCKET CHANNEL SUBSCRIPTION - CRITICAL FOR RECEIVING CONTENT UPDATES
-    // Channel selection logic determines which messages this display will receive
-    const channelName = displayInfo.id ? `display-${displayInfo.id}` : 'display-updates'; // Use display-specific channel if ID exists, otherwise fallback
+    // Subscribe to PROGRAM channel so all displays in same program receive the broadcast
+    const channelName = displayInfo.program_id ? `program-${displayInfo.program_id}` : 'display-updates'; // Use program channel if assigned, otherwise fallback
     addSystemLog(`Subscribed to channel: ${channelName}`); // Log channel subscription
     console.log('LiveDisplay: Subscribing to channel:', channelName); // Debug log channel name
     const channel = pusher.subscribe(channelName); // Subscribe to the determined channel
@@ -334,7 +363,7 @@ const LiveDisplay = () => {
         pusherRef.current = null;
       }
     }
-  }, [displayInfo.program]);
+  }, [displayInfo.program_id]);
 
   // Offline detection functions (no longer used, kept for compatibility)
   const startOfflineTimeout = () => {
@@ -634,6 +663,10 @@ const LiveDisplay = () => {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div style={{ color: 'var(--accent-orange)', fontSize: '14px', textAlign: 'right' }}>
+              if display info or program fails to update, refresh the page - next refresh in 60 seconds...
             </div>
           </div>
         </div>

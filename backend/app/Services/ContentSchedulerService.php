@@ -136,14 +136,9 @@ class ContentSchedulerService
             // Prepare content data based on type
             $contentData = $this->prepareContentData($item, $programState['current_sort_order']);
 
-            // Broadcast the content to all displays in this program
-            if ($program->displays->isEmpty()) {
-                Log::info("No displays for program {$program->id}, skipping broadcast");
-            } else {
-                foreach ($program->displays as $display) {
-                    broadcast(new ProgramContentUpdate($contentData, $display->id));
-                }
-            }
+            // Broadcast ONCE to the program channel - all displays listening will receive it
+            Log::info("Broadcasting content update to program channel: program-{$program->id}");
+            broadcast(new ProgramContentUpdate($contentData, $program->id));
 
             // Update program state
             self::$programStates[$program->id] = [

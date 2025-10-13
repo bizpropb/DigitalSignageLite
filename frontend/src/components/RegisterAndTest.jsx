@@ -662,6 +662,10 @@ function RegisterAndTest() {
           }
         </p>
       </div>
+
+      <div style={{ color: 'var(--accent-orange)', fontSize: '14px', marginTop: '20px', marginBottom: '20px', textAlign: 'right' }}>
+        refresh the page to update display info
+      </div>
       </div>
     </div>
   )

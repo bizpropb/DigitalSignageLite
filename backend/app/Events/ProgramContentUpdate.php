@@ -14,40 +14,40 @@ class ProgramContentUpdate implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public string $signed_message;
-    public int $displayId;
+    public int $programId;
 
-    public function __construct(array $contentData, int $displayId)
+    public function __construct(array $contentData, int $programId)
     {
         \Log::info("ProgramContentUpdate EVENT CONSTRUCTOR - START");
         \Log::info("ProgramContentUpdate constructor params:", [
             'contentData' => $contentData,
-            'displayId' => $displayId
+            'programId' => $programId
         ]);
-        \Log::info("Broadcasting to display channel: display-{$displayId}");
+        \Log::info("Broadcasting to program channel: program-{$programId}");
 
-        $this->displayId = $displayId;
-        
+        $this->programId = $programId;
+
         $signingService = app(MessageSigningService::class);
         \Log::info("MessageSigningService instantiated");
-        
+
         $messageData = [
             'content' => $contentData,
-            'display_id' => $displayId,
+            'program_id' => $programId,
             'type' => 'content-update',
             'timestamp' => now()->toISOString()
         ];
-        
+
         \Log::info("Message data prepared:", $messageData);
-        
+
         $this->signed_message = $signingService->signMessage($messageData);
-        
+
         \Log::info("Message signed successfully, signed_message length:", ['length' => strlen($this->signed_message)]);
         \Log::info("ProgramContentUpdate EVENT CONSTRUCTOR - END");
     }
 
     public function broadcastOn()
     {
-        $channelName = 'display-' . $this->displayId;
+        $channelName = 'program-' . $this->programId;
         \Log::info("ProgramContentUpdate broadcastOn() called - returning '{$channelName}' channel");
         return new Channel($channelName);
     }
