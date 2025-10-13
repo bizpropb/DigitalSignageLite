@@ -24,24 +24,24 @@ class MessageSigningService
         \Log::info("MessageSigningService signMessage() START");
         \Log::info("Private key path:", ['path' => $this->privateKeyPath]);
         \Log::info("Private key file exists?", ['exists' => file_exists($this->privateKeyPath)]);
-        
+
         if (!file_exists($this->privateKeyPath)) {
             \Log::error("Private key file does not exist!");
             throw new \Exception("Private key file not found: " . $this->privateKeyPath);
         }
-        
+
         $privateKey = file_get_contents($this->privateKeyPath);
         \Log::info("Private key loaded, length:", ['length' => strlen($privateKey)]);
-        
+
         $payload = [
             'data' => $data,
             'iat' => time(),
             'exp' => time() + 300, // 5 minutes expiry
-            'iss' => config('app.name', 'Presenter-V3')
+            'iss' => config('app.name', 'DigitalSignageLite')
         ];
-        
+
         \Log::info("JWT payload prepared:", $payload);
-        
+
         try {
             $jwt = JWT::encode($payload, $privateKey, 'RS256');
             \Log::info("JWT encoded successfully, length:", ['length' => strlen($jwt)]);
@@ -59,7 +59,7 @@ class MessageSigningService
     public function verifyMessage(string $jwt): array
     {
         $publicKey = file_get_contents($this->publicKeyPath);
-        
+
         try {
             $decoded = JWT::decode($jwt, new Key($publicKey, 'RS256'));
             return (array) $decoded->data;

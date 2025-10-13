@@ -43,7 +43,7 @@ const DisplayInfo = ({
 
       {/* Display Information */}
       <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', margin: 0 }}>
-        <h3 className="h3 text-accent">Display Info</h3>
+        <h1>Display Info</h1>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
           <div>
             Name: {displayInfo.name || 'Not registered'}

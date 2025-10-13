@@ -510,7 +510,7 @@ function RegisterAndTest() {
         marginBottom: '10px'
       }}>
         <div>
-          <h1 style={{ margin: '0 0 0 0', color: 'var(--accent-orange)', fontSize: '1.3rem' }}>Presenter V4 - Register & Test</h1>
+          <h1>DigitalSignageLite - Register & Test</h1>
           <p className="page-description">
             Register your display device and test WebSocket messaging
           </p>
@@ -575,7 +575,7 @@ function RegisterAndTest() {
 
         {/* Messages */}
         <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', margin: 0 }}>
-          <h3 className="h3 text-accent">Test Message System</h3>
+          <h1>Test Message System</h1>
           {messages.length === 0 ? (
             <p className="no-messages">
               No messages received yet.
@@ -606,7 +606,7 @@ function RegisterAndTest() {
 
       {/* Connection Stability Test */}
       <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px' }}>
-        <h3 className="h3 text-accent">Connection Stability Test</h3>
+        <h1>Connection Stability Test</h1>
 
         <div style={{
           display: 'flex',

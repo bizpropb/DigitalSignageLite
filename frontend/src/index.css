@@ -112,6 +112,12 @@ a:hover {
 }
 
 /* Headings */
+h1 {
+  color: var(--accent-orange);
+  font-size: 1.3rem;
+  margin: 0;
+}
+
 .h3 {
   margin: 0 0 15px 0;
   font-size: 1.3rem;
@@ -139,12 +145,6 @@ a:hover {
   background-color: var(--bg-secondary);
   border-radius: 6px;
   border: 1px solid var(--accent-orange);
-}
-
-.text-accent {
-  color: var(--accent-orange);
-  font-size: 1.3rem;
-  font-weight: bold;
 }
 
 .text-mono {

@@ -1,4 +1,4 @@
-# Presenter V4
+# DigitalSignageLite
 
 ## Lightweight Digital-Signage Stack
 
@@ -67,11 +67,6 @@ If you need to get around these restrictions, I recommend you use a Raspberry Pi
 **Note:** The following steps are only for local development. If you plan on using this thing in production, use Docker for the entire Stack, not just the DB, and spare yourself the headache! Also make sure to set all the services to automatically restart, just in case.
 
 ### 1. Start Database & Install Dependencies
-
-**Only if needed:**
-```bash
-docker volume rm presenter-v4_postgres_data   # optional, wipes old db, use only if needed
-```
 
 **Start DB & Dependencies Install (once):**
 ```bash
@@ -149,7 +144,7 @@ Access: http://localhost:3000
 ### 5. Access pgAdmin (Optional)
 - URL: http://localhost:5050
 - Login: admin@example.com / password
-- Add server: Host=localhost, Port=5432, Database=presenter_v4, User=admin, Password=password
+- Add server: Host=localhost, Port=5432, Database=DigitalSignageLite, User=admin, Password=password
 
 
 # TROUBLESHOOTING

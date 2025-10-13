@@ -5,8 +5,8 @@ function Index() {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ color: 'var(--accent-orange)' }}>
-        Presenter V4
+      <h1>
+        DigitalSignageLite
       </h1>
 
       <p style={{ marginBottom: '15px' }}>
@@ -19,7 +19,7 @@ function Index() {
 
         <div className="grid-container">
           <div className="info-card">
-            <strong className="text-accent">Frontend Routes:</strong>
+            <h1>Frontend Routes:</h1>
             <div className="text-mono">
               <Link to="/register" className="link-route">
                 <strong>/register</strong> - Register device, show status, testing suite
@@ -31,7 +31,7 @@ function Index() {
           </div>
 
           <div className="info-card">
-            <strong className="text-accent">Quick Setup:</strong>
+            <h1>Quick Setup:</h1>
             <div style={{ color: 'var(--text-secondary)' }}>
               Navigate to <strong>/register</strong> to register device with the system.
               Use <strong>/live</strong> for receiving and displaying content signals.
@@ -45,7 +45,7 @@ function Index() {
 
         <div className="grid-container">
           <div className="info-card">
-            <strong className="text-accent">Backend Routes:</strong>
+            <h1>Backend Routes:</h1>
             <div className="text-mono">
               <a href="http://localhost:8000/admin" target="_blank" rel="noopener noreferrer" className="link-route">
                 <strong>http://localhost:8000/admin</strong> - Admin panel

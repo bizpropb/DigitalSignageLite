@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:17
-    container_name: presenter-postgres
+    container_name: DigitalSignageLite-postgres
     environment:
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_USER=${DB_USERNAME}
@@ -12,12 +12,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - presenter-network
+      - DigitalSignageLite-network
 
   # PostgreSQL Admin Interface
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: presenter-pgadmin
+    container_name: DigitalSignageLite-pgadmin
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
@@ -26,11 +26,11 @@ services:
     depends_on:
       - postgres
     networks:
-      - presenter-network
+      - DigitalSignageLite-network
 
 volumes:
   postgres_data:
 
 networks:
-  presenter-network:
+  DigitalSignageLite-network:
     driver: bridge

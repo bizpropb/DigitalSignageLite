@@ -592,7 +592,7 @@ const LiveDisplay = () => {
       {showStandby && (
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#0a0a0a', zIndex: 1000, overflowY: 'auto', padding: '20px', boxSizing: 'border-box', fontFamily: 'inherit' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '2.5rem', margin: 0, color: 'var(--accent-orange)', lineHeight: 1.1 }}>Presenter V4 - Live Display</h1>
+            <h1>DigitalSignageLite - Live Display</h1>
             <p className="page-description" style={{ marginBottom: '15px' }}>
               I'm waiting for the next signal, it might take a moment...
             </p>
@@ -604,14 +604,22 @@ const LiveDisplay = () => {
               />
             </div>
 
-            {!displayInfo.program && (
+            {(!displayInfo.program || displayInfo.program === "New" || displayInfo.program === "Inactive") && (
               <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '15px', margin: '20px 0', color: 'var(--text-secondary)' }}>
-                <strong className="text-accent">No Program Assigned</strong> - This display is not assigned to any program yet.
+                {!displayInfo.program && (
+                  <>⚠️ Unregistered display! Navigate to the /register route to connect this display to your admin panel!</>
+                )}
+                {displayInfo.program === "New" && (
+                  <>⚠️ Assign a program to this newly added display in the admin panel!</>
+                )}
+                {displayInfo.program === "Inactive" && (
+                  <>⚠️ This display is set to inactive! You can change this in the admin panel!</>
+                )}
               </div>
             )}
 
             <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--accent-orange)', borderRadius: '6px', padding: '20px', marginBottom: '20px' }}>
-              <h3 className="h3 text-accent">System Activity Log</h3>
+              <h1>System Activity Log</h1>
               {systemLogs.length === 0 ? (
                 <p className="no-messages">
                   No activity yet. System is initializing...
