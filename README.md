@@ -88,10 +88,12 @@ php artisan migrate:fresh --seed # This drops the entire database if there is on
 php artisan make:filament-user --name=admin --email=admin@example.com --password=password
 cd ..
 ```
+
 ⚠️ If it fails, it means a local PostgreSQL is running and blocking your port.
-Run "services.msc", find "postgresql-xxx-xx", stop it. Do step 1 again, then step 3.
-If that didnt help, "run netstat -ano | findstr :5432" and stop these services (might require a restart afterwards)
+Run "services.msc", find "postgresql-xxx-xx", stop it. Do step 1 again, then step 3. If that didnt help, "run netstat -ano | findstr :5432" and stop these services (might require a restart afterwards)
+
 ⚠️ If you have PostgreSQL installed on your system, you need to stop the service every time you restart your computer!
+
 --------------------------------------------
 
 ### 4. Start Applications
